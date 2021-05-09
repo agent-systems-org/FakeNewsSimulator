@@ -1,10 +1,11 @@
 from spade.agent import Agent
 from agents.dummy import DummyAgent #temporary
-from spade.behaviour import FSMBehaviour, State
+from spade.behaviour import CyclicBehaviour
 from spade.message import Message
 from spade.template import Template
 import numpy as np
 import random
+import json
 
 class GraphCreator(Agent):
     def __init__(self, jid, password, vertices_no, avg=None,
@@ -44,7 +45,7 @@ class GraphCreator(Agent):
         for i in range(0, self.vertices_no):
             jid = self.jids[i]
 
-            self.agents.append(DummyAgent(jid, self.password, self.locations[i], self.adj_list[i]))
+            self.agents.append(DummyAgent(self.jid, jid, self.password, self.locations[i], self.adj_list[i]))
 
 
     def generate_adj_list(self):
@@ -54,7 +55,7 @@ class GraphCreator(Agent):
             possible_vertices.remove(self.jids[i])
 
             random.shuffle(possible_vertices)
-            self.adj_list[i] = set(possible_vertices[:adj_n[i]])
+            self.adj_list[i] = possible_vertices[:adj_n[i]]
 
     def generate_coordinates(self):
         self.locations = [
@@ -76,5 +77,37 @@ class GraphCreator(Agent):
         self.generate_adj_list()
         print('Initializing agents')
         self.generate_agents()
+
+        template = Template()
+        template.set_metadata('performative', 'query')
+        b = self.InformAboutNeighboursBehaviour(self.adj_list, self.jid_map)
+        self.add_behaviour(b, template)
+
+    class InformAboutNeighboursBehaviour(CyclicBehaviour):
+
+        def __init__ (self, adj_list, jid_map):
+            super().__init__()
+            self.adj_list = adj_list
+            self.jid_map = jid_map
+            print('Graph creator is ready to inform other agents about their neighbours')
+
+
+        async def run(self):
+            msg = await self.receive(timeout=10)
+            if msg:
+                sender = str(msg.sender)
+
+                if sender not in self.jid_map:
+                    return
+
+                sender = self.jid_map[sender]
+
+                if sender not in self.adj_list:
+                    return
+                
+                reply = msg.make_reply()
+                reply.body = json.dumps({'neighbours' : self.adj_list[sender]})
+                await self.send(reply)
+
 
 
