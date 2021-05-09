@@ -17,7 +17,6 @@ class Message:
     def new(self, topic):
         """ Generates new random message  
 
-            jid -- creator's jid
             topic -- message's topic
         """
         self.id = next(Message.id_iter) #each msg gets a unique incremented id
@@ -34,7 +33,6 @@ class Message:
     def new_debunk(self, debunk_id, debunk_topic):
         """ Generates new debunking message for a given fake news 
 
-            jid -- debunker's jid
             debunk_id -- id of the message we are debunking
             debunk_topic -- topic of the message we are debunking
         """
@@ -54,6 +52,10 @@ class Message:
         self.debunk_id = debunk_id
 
     def fromJSON(self, msg_json):
+        """ Loads message data from a JSON string
+
+            msg_json - json represenation of a message
+        """
         tmp = json.loads(msg_json, object_hook=lambda d: SimpleNamespace(**d))
         self.id = tmp.id
         self.topic = tmp.topic
@@ -68,6 +70,7 @@ class Message:
         self.debunk_id = tmp.debunk_id
     
     def toJSON(self):
+        """ Converts a Message into a JSON and returns as string """
         return json.dumps(self.__dict__)
 
         
