@@ -1,6 +1,6 @@
-from spade import agent
+from spade.agent import Agent
 
-class DummyAgent(agent.Agent):
+class DummyAgent(Agent):
     def __init__(self, jid, password, location, adj_list, verify_security=False):
         super().__init__(jid, password, verify_security)
         self.location = location

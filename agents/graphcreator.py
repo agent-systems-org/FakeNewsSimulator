@@ -1,12 +1,12 @@
-from spade import agent
-from agents.dummy import DummyAgent
+from spade.agent import Agent
+from agents.dummy import DummyAgent #temporary
 from spade.behaviour import FSMBehaviour, State
 from spade.message import Message
 from spade.template import Template
 import numpy as np
 import random
 
-class GraphCreator(agent.Agent):
+class GraphCreator(Agent):
     def __init__(self, jid, password, vertices_no, avg=None,
                  std=None, mapsize=100, verify_security=False):
         super().__init__(jid, password, verify_security)
