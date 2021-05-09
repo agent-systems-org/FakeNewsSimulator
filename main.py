@@ -1,11 +1,31 @@
-from spade import agent
+from  agents.graphcreator import GraphCreator
+import time
 
-class DummyAgent(agent.Agent):
-    async def setup(self):
-        print("Hello World! I'm agent {}".format(str(self.jid)))
+def main():
+    jid = "test_agent@jabbim.pl/21360"
 
-dummy = DummyAgent("test_agent@jabbim.pl", "123")
-future = dummy.start()
-future.result()
+    g = GraphCreator(jid, "123", 8)
 
-dummy.stop()
+    future = g.start()
+    future.result()
+
+    agents = g.agents
+
+    for agent in agents:
+        future = agent.start()
+        future.result()
+
+    all_alive = lambda: all(map(lambda agent: agent.is_alive(), [agent for agent in agents]))
+
+    while g.is_alive() and all_alive():
+        try:
+            time.sleep(5)
+        except KeyboardInterrupt:
+            for agent in agents:
+                agent.stop()
+
+            g.stop()
+            break
+
+if __name__ == "__main__":
+    main()
