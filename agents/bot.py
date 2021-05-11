@@ -1,13 +1,14 @@
 import datetime
 import random
 import asyncio
-from spade.behaviour import PeriodicBehaviour
+from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
 
 
-MAX_INITIAL_DELAY_SEC = 1  # change to 30 after testing
-MAX_PERIOD_SEC = 15  # change to 60 after testing
+MAX_INITIAL_DELAY_SEC = 30
+MAX_PERIOD_SEC = 120
+MAX_RECEIVE_TIME_SEC = 2137
 
 
 class Bot(Agent):
@@ -26,13 +27,15 @@ class Bot(Agent):
 
     async def setup(self):
         self.log(
-            f"bot, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {self.adj_list}"
+            f"bot, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {self.adj_list}, fakenews: {self.fakenews_msgs}"
         )
         start_at = datetime.datetime.now() + datetime.timedelta(seconds=self.delay)
         self.spread_fakenews_behaviour = self.SpreadFakenewsBehaviour(
             period=self.period, start_at=start_at
         )
         self.add_behaviour(self.spread_fakenews_behaviour)
+        self.receive_fakenews_behaviour = self.ReceiveFakenewsBehaviour()
+        self.add_behaviour(self.receive_fakenews_behaviour)
 
     class SpreadFakenewsBehaviour(PeriodicBehaviour):
         async def run(self):
@@ -51,6 +54,7 @@ class Bot(Agent):
                 for recipient in rand_recipients:
                     msg = Message()
                     msg.to = recipient
+                    msg.body = rand_fakenews_msg
                     msgs.append(msg)
 
                 await asyncio.wait([self.send(msg) for msg in msgs])
@@ -59,3 +63,17 @@ class Bot(Agent):
                 self.agent.log(
                     f"couldn't spread fakenews, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.fakenews_msgs}"
                 )
+
+    class ReceiveFakenewsBehaviour(CyclicBehaviour):
+        async def run(self):
+            msg = await self.receive(MAX_RECEIVE_TIME_SEC)
+
+            if not msg:
+                self.agent.log("timeout or received message is empty")
+
+            else:
+                # TODO add checking if the recieved is fakenews
+                if msg.body not in self.agent.fakenews_msgs:
+                    self.agent.fakenews_msgs.append(msg.body)
+
+                self.agent.log(f"new message received: {msg.body}, fakenews messages: {self.agent.fakenews_msgs}")
