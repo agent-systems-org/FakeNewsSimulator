@@ -28,10 +28,10 @@ class DummyAgent(Agent):
         self.log(
             f"dummy, location: {self.location}, neighbours: {self.adj_list}, created by: {self.graph_creator_jid}"
         )
-        b = self.getNeighbours(self.graph_creator_jid)
+        b = self.GetNeighboursBehaviour(self.graph_creator_jid)
         self.add_behaviour(b)
 
-    class getNeighbours(OneShotBehaviour):
+    class GetNeighboursBehaviour(OneShotBehaviour):
         def __init__(self, graph_creator_jid):
             super().__init__()
             self.graph_creator_jid = graph_creator_jid
@@ -45,4 +45,8 @@ class DummyAgent(Agent):
             if msg:
                 self.agent.log(
                     f"neighbours received from querying graph creator: {msg.body}"
+                )
+            else:
+                self.agent.log(
+                    f"querying graph creator resulted in either timeout or empty message"
                 )
