@@ -41,7 +41,7 @@ class Bot(Agent):
         async def run(self):
             if self.agent.adj_list and self.agent.fakenews_msgs:
                 num_rand_recipients = random.randint(1, len(self.agent.adj_list))
-                rand_recipients = random.choices(
+                rand_recipients = random.sample(
                     self.agent.adj_list, k=num_rand_recipients
                 )
                 rand_fakenews_msg = random.choice(self.agent.fakenews_msgs)
@@ -76,4 +76,6 @@ class Bot(Agent):
                 if msg.body not in self.agent.fakenews_msgs:
                     self.agent.fakenews_msgs.append(msg.body)
 
-                self.agent.log(f"new message received: {msg.body}, fakenews messages: {self.agent.fakenews_msgs}")
+                self.agent.log(
+                    f"new message received: {msg.body}, fakenews messages: {self.agent.fakenews_msgs}"
+                )
