@@ -7,7 +7,7 @@ from spade.message import Message
 
 
 MAX_INITIAL_DELAY_SEC = 30
-MAX_PERIOD_SEC = 120
+MAX_SPREAD_INTERVAL_SEC = 120
 MAX_RECEIVE_TIME_SEC = 2137
 
 
@@ -17,7 +17,7 @@ class Bot(Agent):
         self.location = location
         self.adj_list = adj_list
         self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
-        self.period = random.randint(1, MAX_PERIOD_SEC)
+        self.period = random.randint(1, MAX_SPREAD_INTERVAL_SEC)
         self.fakenews_msgs = []
 
     def log(self, msg):
