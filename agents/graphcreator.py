@@ -1,7 +1,6 @@
 from spade.agent import Agent
 from agents.dummy import DummyAgent #temporary
 from spade.behaviour import CyclicBehaviour
-from spade.message import Message
 from spade.template import Template
 import numpy as np
 import random
