@@ -83,30 +83,26 @@ class GraphCreator(Agent):
         self.add_behaviour(b, template)
 
     class InformAboutNeighboursBehaviour(CyclicBehaviour):
-
         def __init__ (self, adj_list, jid_map):
             super().__init__()
             self.adj_list = adj_list
             self.jid_map = jid_map
             print('Graph creator is ready to inform other agents about their neighbours')
 
-
         async def run(self):
             msg = await self.receive(timeout=10)
+            
             if msg:
-                sender = str(msg.sender)
+                sender_jid = str(msg.sender)
 
-                if sender not in self.jid_map:
+                if sender_jid not in self.jid_map:
                     return
 
-                sender = self.jid_map[sender]
+                sender_id = self.jid_map[sender_jid]
 
-                if sender not in self.adj_list:
+                if sender_id not in self.adj_list:
                     return
                 
                 reply = msg.make_reply()
-                reply.body = json.dumps({'neighbours' : self.adj_list[sender]})
+                reply.body = json.dumps({'neighbours' : self.adj_list[sender_id]})
                 await self.send(reply)
-
-
-
