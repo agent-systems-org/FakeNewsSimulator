@@ -1,16 +1,13 @@
 import datetime
 import random
-import json
-from spade.template import Template
+import asyncio
 from spade.behaviour import PeriodicBehaviour
 from spade.agent import Agent
 from spade.message import Message
-import numpy as np
-import asyncio
 
 
-MAX_INITIAL_DELAY_SEC = 30
-MAX_PERIOD_SEC = 60
+MAX_INITIAL_DELAY_SEC = 1  # change to 30 after testing
+MAX_PERIOD_SEC = 15  # change to 60 after testing
 
 
 class Bot(Agent):
@@ -38,9 +35,6 @@ class Bot(Agent):
         self.add_behaviour(self.spread_fakenews_behaviour)
 
     class SpreadFakenewsBehaviour(PeriodicBehaviour):
-        async def send_msgs(self, msgs):
-            await asyncio.wait([self.send(msg) for msg in msgs])
-
         async def run(self):
             if self.agent.adj_list and self.agent.fakenews_msgs:
                 num_rand_recipients = random.randint(1, len(self.agent.adj_list))
@@ -59,9 +53,7 @@ class Bot(Agent):
                     msg.to = recipient
                     msgs.append(msg)
 
-                loop = asyncio.get_event_loop()
-                loop.run_until_complete(self.send_msgs(msgs))
-                loop.close()
+                await asyncio.wait([self.send(msg) for msg in msgs])
 
             else:
                 self.agent.log(
