@@ -1,5 +1,5 @@
-from agents import Bot
 import time
+from agents import Bot
 
 BOT_1_JID = "test_agent@jabbim.pl/111"
 BOT_2_JID = "test_agent@jabbim.pl/222"
@@ -12,7 +12,7 @@ if __name__ == "__main__":
     bot1.start()
 
     bot2 = Bot(BOT_2_JID, "123", "{1,1}", [BOT_1_JID, BOT_3_JID])
-    bot1.fakenews_msgs = ["msg3"]
+    bot2.fakenews_msgs = ["msg3"]
     bot2.start()
 
     bot3 = Bot(BOT_3_JID, "123", "{1,1}", [BOT_1_JID, BOT_2_JID])
