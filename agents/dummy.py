@@ -1,4 +1,5 @@
 import datetime
+import json
 from spade.agent import Agent
 from spade.message import Message
 from spade.behaviour import OneShotBehaviour
@@ -43,8 +44,9 @@ class DummyAgent(Agent):
 
             msg = await self.receive(timeout=10)
             if msg:
+                body_json = json.loads(msg.body)
                 self.agent.log(
-                    f"neighbours received from querying graph creator: {msg.body}"
+                    f"neighbours received from querying graph creator: {body_json['neighbours']}"
                 )
             else:
                 self.agent.log(
