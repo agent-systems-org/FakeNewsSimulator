@@ -11,10 +11,10 @@ class GraphCreator(Agent):
                  std=None, mapsize=100, verify_security=False):
         super().__init__(jid, password, verify_security)
 
-        if avg == None:
+        if avg is None:
             avg = vertices_no / 2.0
 
-        if std == None:
+        if std is None:
             std = vertices_no / 2.0
 
         self.adj_list = {}
