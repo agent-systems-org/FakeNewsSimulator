@@ -1,5 +1,5 @@
 from spade.agent import Agent
-from agents.dummy import DummyAgent #temporary
+from agents import DummyAgent #temporary
 from spade.behaviour import FSMBehaviour, State
 from spade.message import Message
 from spade.template import Template
