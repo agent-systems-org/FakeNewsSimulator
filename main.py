@@ -1,4 +1,5 @@
 from  agents.graphcreator import GraphCreator
+from visualization import visualize_network
 import time
 
 def main():
@@ -14,6 +15,8 @@ def main():
     for agent in agents:
         future = agent.start()
         future.result()
+
+    visualize_network(g.agents)
 
     all_alive = lambda: all(map(lambda agent: agent.is_alive(), [agent for agent in agents]))
 
