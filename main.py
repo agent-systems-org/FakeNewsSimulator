@@ -1,4 +1,4 @@
-from  agents.graphcreator import GraphCreator
+from agents import GraphCreator
 import time
 
 def main():
