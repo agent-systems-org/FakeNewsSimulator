@@ -58,7 +58,7 @@ class GraphCreator(Agent):
 
     def generate_coordinates(self):
         self.locations = [
-            { np.random.randint(0, self.mapsize), np.random.randint(0, self.mapsize) }
+            (np.random.randint(0, self.mapsize), np.random.randint(0, self.mapsize))
             for i in range(0, self.vertices_no)
         ]
 
