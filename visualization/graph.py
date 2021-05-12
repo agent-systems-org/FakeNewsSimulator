@@ -6,7 +6,7 @@ def get_id(jid):
     return str(jid).split("/")[1]
 
 
-def visualize_network(agents):
+def visualize_network(agents, pause_time_sec=5):
     G = nx.DiGraph()
 
     edges = []
@@ -36,23 +36,26 @@ def visualize_network(agents):
     # TODO get type from the node (i.e. node.type)
     # node_colors = [type_to_color_map.get(node, 0.25) for node in G.nodes()]
 
-    pos = nx.spring_layout(G)
+    pos_dict = nx.get_node_attributes(G, "pos")
+    positions = {}
+    for node, position in zip(pos_dict.keys(), pos_dict.values()):
+        positions[node] = position
 
     # TODO use node_colors as node_color
     nx.draw_networkx_nodes(
         G,
-        pos,
+        positions,
         cmap=plt.get_cmap("jet"),
         node_color="r",
         node_size=500,
         alpha=0.5,
     )
 
-    nx.draw_networkx_edges(G, pos, arrows=True, arrowsize=15, alpha=0.5)
+    nx.draw_networkx_edges(G, positions, arrows=True, arrowsize=15, alpha=0.5)
 
-    attr_dicts = nx.get_node_attributes(G, "attr_dict").values()
+    attr_dict = nx.get_node_attributes(G, "attr_dict")
     labels = {}
-    for node, attr_dict in zip(G.nodes(), attr_dicts):
+    for node, attr_dict in zip(G.nodes(), attr_dict.values()):
         labels[node] = {
             "id": node,
             "f": attr_dict["fakenews"],
@@ -60,7 +63,9 @@ def visualize_network(agents):
             "n": attr_dict["neighbours"],
         }
 
-    nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold", labels=labels)
+    nx.draw_networkx_labels(
+        G, positions, font_size=12, font_weight="bold", labels=labels
+    )
 
     legend = """
     f - fakenews messages count
@@ -70,4 +75,6 @@ def visualize_network(agents):
     plt.text(0.02, 0.5, legend, fontsize=14, transform=plt.gcf().transFigure)
     plt.get_current_fig_manager().set_window_title("Fake news simulator")
     plt.title("Network graph")
-    plt.show()
+    plt.show(block=False)
+    plt.pause(pause_time_sec)
+    plt.clf()
