@@ -40,9 +40,34 @@ def visualize_network(agents):
 
     # TODO use node_colors as node_color
     nx.draw_networkx_nodes(
-        G, pos, cmap=plt.get_cmap("jet"), node_color="r", node_size=500, alpha=0.5,
+        G,
+        pos,
+        cmap=plt.get_cmap("jet"),
+        node_color="r",
+        node_size=500,
+        alpha=0.5,
     )
-    nx.draw_networkx_edges(G, pos, arrows=True, arrowsize=15, alpha=0.5)
-    nx.draw_networkx_labels(G, pos, font_size=20)
 
+    nx.draw_networkx_edges(G, pos, arrows=True, arrowsize=15, alpha=0.5)
+
+    attr_dicts = nx.get_node_attributes(G, "attr_dict").values()
+    labels = {}
+    for node, attr_dict in zip(G.nodes(), attr_dicts):
+        labels[node] = {
+            "id": node,
+            "f": attr_dict["fakenews"],
+            "s": attr_dict["state"],
+            "n": attr_dict["neighbours"],
+        }
+
+    nx.draw_networkx_labels(G, pos, font_size=12, labels=labels)
+
+    legend = """
+    f - fakenews messages count
+    s - state
+    n - neighbours count
+    """
+    plt.text(0.02, 0.5, legend, fontsize=14, transform=plt.gcf().transFigure)
+    plt.get_current_fig_manager().set_window_title("Fake news simulator")
+    plt.title("Network graph")
     plt.show()
