@@ -1,20 +1,22 @@
 from spade.agent import Agent
+
 from agents import DummyAgent #temporary
 from spade.behaviour import FSMBehaviour, State
 from spade.message import Message
 from spade.template import Template
 import numpy as np
 import random
+import json
 
 class GraphCreator(Agent):
     def __init__(self, jid, password, vertices_no, avg=None,
                  std=None, mapsize=100, verify_security=False):
         super().__init__(jid, password, verify_security)
 
-        if avg == None:
+        if avg is None:
             avg = vertices_no / 2.0
 
-        if std == None:
+        if std is None:
             std = vertices_no / 2.0
 
         self.adj_list = {}
@@ -44,7 +46,7 @@ class GraphCreator(Agent):
         for i in range(0, self.vertices_no):
             jid = self.jids[i]
 
-            self.agents.append(DummyAgent(jid, self.password, self.locations[i], self.adj_list[i]))
+            self.agents.append(DummyAgent(self.jid, jid, self.password, self.locations[i], self.adj_list[i]))
 
 
     def generate_adj_list(self):
@@ -54,7 +56,7 @@ class GraphCreator(Agent):
             possible_vertices.remove(self.jids[i])
 
             random.shuffle(possible_vertices)
-            self.adj_list[i] = set(possible_vertices[:adj_n[i]])
+            self.adj_list[i] = possible_vertices[:adj_n[i]]
 
     def generate_coordinates(self):
         self.locations = [
@@ -77,4 +79,32 @@ class GraphCreator(Agent):
         print('Initializing agents')
         self.generate_agents()
 
+        template = Template()
+        template.set_metadata('performative', 'query')
+        b = self.InformAboutNeighboursBehaviour(self.adj_list, self.jid_map)
+        self.add_behaviour(b, template)
 
+    class InformAboutNeighboursBehaviour(CyclicBehaviour):
+        def __init__ (self, adj_list, jid_map):
+            super().__init__()
+            self.adj_list = adj_list
+            self.jid_map = jid_map
+            print('Graph creator is ready to inform other agents about their neighbours')
+
+        async def run(self):
+            msg = await self.receive(timeout=10)
+            
+            if msg:
+                sender_jid = str(msg.sender)
+
+                if sender_jid not in self.jid_map:
+                    return
+
+                sender_id = self.jid_map[sender_jid]
+
+                if sender_id not in self.adj_list:
+                    return
+                
+                reply = msg.make_reply()
+                reply.body = json.dumps({'neighbours' : self.adj_list[sender_id]})
+                await self.send(reply)
