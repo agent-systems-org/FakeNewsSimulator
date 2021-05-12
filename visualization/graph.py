@@ -60,7 +60,7 @@ def visualize_network(agents):
             "n": attr_dict["neighbours"],
         }
 
-    nx.draw_networkx_labels(G, pos, font_size=12, labels=labels)
+    nx.draw_networkx_labels(G, pos, font_size=12, font_weight="bold", labels=labels)
 
     legend = """
     f - fakenews messages count
