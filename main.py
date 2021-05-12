@@ -1,9 +1,9 @@
-from agents.graphcreator import GraphCreator
-from spade import quit_spade
-from visualization import visualize_network
 import time
 import concurrent
 import sys
+from spade import quit_spade
+from agents.graphcreator import GraphCreator
+from visualization import visualize_network
 
 
 AGENTS_DEFAULT_COUNT = 16
@@ -19,12 +19,12 @@ def main():
 
     jid = "test_agent@jabbim.pl/2000000"
 
-    g = GraphCreator(jid, "123", agents_count)
+    graph_creator = GraphCreator(jid, "123", agents_count)
 
-    future = g.start()
+    future = graph_creator.start()
     future.result()
 
-    agents = g.agents
+    agents = graph_creator.agents
 
     done, not_done = concurrent.futures.wait(
         [agent.start() for agent in agents],
@@ -32,21 +32,19 @@ def main():
         return_when=concurrent.futures.ALL_COMPLETED,
     )
     time.sleep(1)
-    print(f"created: {len(done)}, failed: {len(not_done)}")
+    print(f"Created: {len(done)}, failed: {len(not_done)}")
 
-    all_alive = lambda: all(
-        map(lambda agent: agent.is_alive(), [agent for agent in agents])
-    )
+    all_alive = lambda: all(map(lambda agent: agent.is_alive(), agents))
 
-    while g.is_alive() and all_alive():
+    while graph_creator.is_alive() and all_alive():
         try:
-            visualize_network(g.agents, pause_time_sec=5)
+            visualize_network(graph_creator.agents, pause_time_sec=5)
             time.sleep(5)
         except KeyboardInterrupt:
             for agent in agents:
                 agent.stop()
 
-            g.stop()
+            graph_creator.stop()
             break
 
     quit_spade()
