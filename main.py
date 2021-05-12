@@ -4,7 +4,7 @@ import time
 def main():
     jid = "test_agent@jabbim.pl/21360"
 
-    g = GraphCreator(jid, "123", 8)
+    g = GraphCreator(jid, "123", 30)
 
     future = g.start()
     future.result()

@@ -1,7 +1,7 @@
 from spade.agent import Agent
 
 from agents import DummyAgent #temporary
-from spade.behaviour import FSMBehaviour, State
+from spade.behaviour import CyclicBehaviour, State
 from spade.message import Message
 from spade.template import Template
 import numpy as np
