@@ -19,7 +19,7 @@ def main():
 
     first_jid = "test_agent@jabbim.pl/3000000"
     password = "123"
-    
+
     graph_creator = GraphCreator(first_jid, password, agents_count)
     graph_creator.start().result()
 
@@ -42,11 +42,10 @@ def main():
             visualize_network(graph_creator.agents, pause_time_sec=5)
             time.sleep(5)
         except KeyboardInterrupt:
-            for agent in agents:
-                agent.stop()
-
-            graph_creator.stop()
             break
+
+    for agent in agents + [graph_creator]:
+        agent.stop()
 
     quit_spade()
 
