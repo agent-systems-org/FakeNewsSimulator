@@ -1,12 +1,15 @@
 import time
 import concurrent
 import sys
+import math
 from spade import quit_spade
 from agents.graphcreator import GraphCreator
 from visualization import visualize_network
+import matplotlib.animation as animation
+import matplotlib.pyplot as plt
 
 
-AGENTS_DEFAULT_COUNT = 16
+AGENTS_DEFAULT_COUNT = 8
 
 
 def main():
@@ -33,16 +36,15 @@ def main():
     time.sleep(1)
     print(f"Created: {len(done)}, failed: {len(not_done)}")
 
-    are_all_agents_alive = lambda: all(
-        map(lambda agent: agent.is_alive(), agents + [graph_creator])
+    fig = plt.figure()
+    # matplotlib requires to use this '_' variable. don't ask why. it's python.
+    _ = animation.FuncAnimation(
+        fig,
+        visualize_network,
+        fargs=(graph_creator.agents,),
+        interval=math.sqrt(agents_count) * 1000,
     )
-
-    while are_all_agents_alive():
-        try:
-            visualize_network(graph_creator.agents, pause_time_sec=5)
-            time.sleep(5)
-        except KeyboardInterrupt:
-            break
+    plt.show()
 
     for agent in agents + [graph_creator]:
         agent.stop()
