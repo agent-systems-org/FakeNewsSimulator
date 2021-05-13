@@ -27,11 +27,8 @@ def main():
 
     agents = graph_creator.agents
 
-    concurrent.futures.wait(
-        [agent.start() for agent in agents],
-        timeout=1,
-        return_when=concurrent.futures.ALL_COMPLETED,
-    )
+    with concurrent.futures.ThreadPoolExecutor() as e:
+        e.submit([agent.start() for agent in agents])
 
     fig = plt.figure()
     # matplotlib requires to use this '_' variable. don't ask why. it's python.
