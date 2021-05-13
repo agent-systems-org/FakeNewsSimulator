@@ -38,6 +38,8 @@ def main():
         fargs=(graph_creator.agents,),
         interval=math.sqrt(agents_count) * 1000,
     )
+
+    # agents will start appearing while the GUI loop is running
     plt.show()
 
     for agent in agents + [graph_creator]:
