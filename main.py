@@ -1,4 +1,3 @@
-import time
 import concurrent
 import sys
 import math
@@ -28,13 +27,11 @@ def main():
 
     agents = graph_creator.agents
 
-    done, not_done = concurrent.futures.wait(
+    concurrent.futures.wait(
         [agent.start() for agent in agents],
-        timeout=agents_count / 2,
+        timeout=1,
         return_when=concurrent.futures.ALL_COMPLETED,
     )
-    time.sleep(1)
-    print(f"Created: {len(done)}, failed: {len(not_done)}")
 
     fig = plt.figure()
     # matplotlib requires to use this '_' variable. don't ask why. it's python.
