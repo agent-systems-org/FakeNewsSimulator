@@ -6,8 +6,8 @@ def get_id(jid):
     return str(jid).split("/")[1]
 
 
-def visualize_network(frame, agents):
-    print(f"frame: {frame}")
+def visualize_network(epoch, agents):
+    print(f"Epoch: {epoch}")
     plt.clf()
 
     graph = nx.DiGraph()
