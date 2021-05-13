@@ -27,6 +27,7 @@ def main():
 
     agents = graph_creator.agents
 
+    # by default it uses at most 32 CPU cores
     with concurrent.futures.ThreadPoolExecutor() as e:
         e.submit([agent.start() for agent in agents])
 
