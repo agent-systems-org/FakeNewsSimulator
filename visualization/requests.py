@@ -14,29 +14,57 @@ def send_post(url, json_data):
         print(f"Couldn't post data to {url}")
 
 
-def post_message(from_jid, to_jid, msg_type):
+def create_msg_dict(msg):
+    return {
+        "from_jid": str(msg["from_jid"]),
+        "to_jid": str(msg["to_jid"]),
+        "type": msg["type"],
+    }
+
+
+def post_messages(msgs):
     """
+    non-blocking
+
+    msgs is a list of messages
+
+    a message: {
+        "from_jid": JID
+        "to_jid": JID
+        "type": string
+    }
+
     supported message types:
-    "fakenews"
-    "debunk"
+        "fakenews"
+        "debunk"
     """
-    data = json.dumps(
-        {"from_jid": str(from_jid), "to_jid": str(to_jid), "type": msg_type}
-    )
+    msg_dicts = []
+    for msg in msgs:
+        msg_dicts.append(create_msg_dict(msg))
+
+    data = json.dumps(msg_dicts)
     threading.Thread(target=send_post, args=(URL + "/messages", data)).start()
 
 
-def post_agents(agents):
-    agents_data = []
-    for agent in agents:
-        agents_data.append(
-            {
-                "jid": str(agent.jid),
-                "location": agent.location,
-                "neighbours_count": len(agent.adj_list),
-                "type": "dummy",
-            }
-        )
+def create_agent_dict(agent):
+    return {
+        "location": agent.location,
+        "neighbours_count": len(agent.adj_list),
+        "fakenews_count": len(agent.fakenews_msgs),
+        "type": agent.type,
+    }
 
-    data = json.dumps(agents_data)
+
+def post_agent(agent):
+    """
+    non-blocking
+
+    agent must have following properties:
+        location: tuple (x, y)
+        neighbours_count: number
+        fakenews_count: number
+        type: string
+    """
+    agent_data = {str(agent.jid): create_agent_dict(agent)}
+    data = json.dumps(agent_data)
     threading.Thread(target=send_post, args=(URL + "/agents", data)).start()
