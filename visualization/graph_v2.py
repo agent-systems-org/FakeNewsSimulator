@@ -12,7 +12,6 @@ refresh_interval_ms = 10000
 
 
 def main():
-
     server = flask.Flask(__name__)
     server_message_queue = []
     server_agents = []
@@ -106,15 +105,15 @@ def main():
         Output("epoch-text", "children"),
         Input("interval-component", "n_intervals"),
     )
-    def update_metrics(n_intervals):
+    def update_epoch(n_intervals):
         return html.Span(f"Epoch: {n_intervals}")
 
     @app.callback(
         Output("graph", "figure"),
         Input("interval-component", "n_intervals"),
     )
-    def update_graph_live(n_intervals):
-        G = nx.random_geometric_graph(2048, 0.125)
+    def update_graph(n_intervals):
+        G = nx.random_geometric_graph(128, 0.125)
         edge_x = []
         edge_y = []
         for edge in G.edges():
