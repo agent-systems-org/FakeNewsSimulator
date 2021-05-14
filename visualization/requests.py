@@ -1,8 +1,16 @@
-import requests
 import threading
 import json
+import requests
+
 
 URL = "http://127.0.0.1:8050"
+
+
+def send_post(url, json_data):
+    try:
+        requests.post(url, json_data)
+    except Exception:
+        print(f"Couldn't post data to {url}")
 
 
 def post_message(from_jid, to_jid, msg_type):
@@ -14,7 +22,7 @@ def post_message(from_jid, to_jid, msg_type):
     data = json.dumps(
         {"from_jid": str(from_jid), "to_jid": str(to_jid), "type": msg_type}
     )
-    threading.Thread(target=requests.post, args=(URL + "/messages", data)).start()
+    threading.Thread(target=send_post, args=(URL + "/messages", data)).start()
 
 
 def post_agents(agents):
@@ -30,4 +38,4 @@ def post_agents(agents):
         )
 
     data = json.dumps(agents_data)
-    threading.Thread(target=requests.post, args=(URL + "/agents", data)).start()
+    threading.Thread(target=send_post, args=(URL + "/agents", data)).start()
