@@ -1,4 +1,5 @@
 import concurrent
+import time
 import sys
 import math
 from spade import quit_spade
@@ -31,17 +32,11 @@ def main():
     with concurrent.futures.ThreadPoolExecutor() as e:
         e.submit([agent.start() for agent in agents])
 
-    fig = plt.figure()
-    # matplotlib requires to use this '_' variable. don't ask why. it's python.
-    _ = animation.FuncAnimation(
-        fig,
-        visualize_network,
-        fargs=(graph_creator.agents,),
-        interval=math.sqrt(agents_count) * 1000,
-    )
-
-    # agents will start appearing while the GUI loop is running
-    plt.show()
+    while True:
+        try:
+            time.sleep(10)
+        except KeyboardInterrupt:
+            break
 
     for agent in agents + [graph_creator]:
         agent.stop()
