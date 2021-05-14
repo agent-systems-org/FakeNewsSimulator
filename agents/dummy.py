@@ -3,6 +3,7 @@ import json
 from spade.agent import Agent
 from spade.message import Message
 from spade.behaviour import OneShotBehaviour
+from visualization import post_message
 
 
 class DummyAgent(Agent):
@@ -38,6 +39,9 @@ class DummyAgent(Agent):
             self.graph_creator_jid = graph_creator_jid
 
         async def run(self):
+            # TODO test message to be removed
+            post_message(self.agent.jid, self.agent.graph_creator_jid, "query")
+
             msg = Message(to=str(self.graph_creator_jid))
             msg.set_metadata("performative", "query")
             await self.send(msg)
