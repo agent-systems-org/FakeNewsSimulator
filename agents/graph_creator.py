@@ -6,7 +6,7 @@ from spade.template import Template
 import numpy as np
 import random
 import json
-from visualization import post_agents
+
 
 class GraphCreator(Agent):
     def __init__(self, jid, password, vertices_no, avg=None,
@@ -46,9 +46,6 @@ class GraphCreator(Agent):
         for i in range(0, self.vertices_no):
             jid = self.jids[i]
             self.agents.append(DummyAgent(self.jid, jid, self.password, self.locations[i], self.adj_list[i]))
-        
-        post_agents(self.agents)
-
 
 
     def generate_adj_list(self):
