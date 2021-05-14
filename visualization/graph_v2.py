@@ -11,27 +11,36 @@ import networkx as nx
 HOST = "127.0.0.1"
 PORT = 8050
 refresh_interval_ms = 10000
+server_message_queue = []
+server_agents = {}
 
 
 def main():
     server = flask.Flask(__name__)
-    server_message_queue = []
-    server_agents = []
 
     @server.route("/messages", methods=["POST"])
-    def post_message():
-        message = json.loads(flask.request.data)
-        server_message_queue.append(message)
-        print(
-            f"received msg: {message}, current queue: {len(server_message_queue)} msgs"
-        )
+    def post_messages():
+        msgs = json.loads(flask.request.data)
+
+        for msg in msgs:
+            server_message_queue.append(msg)
+            print(
+                f"received msg: {msg}, current queue: {len(server_message_queue)} msgs"
+            )
+
         return flask.Response("", 201)
 
     @server.route("/agents", methods=["POST"])
     def post_agents():
-        global server_agents
-        server_agents = json.loads(flask.request.data)
-        print(f"received agents: {server_agents}, total: {len(server_agents)} agents")
+        agent_dict = json.loads(flask.request.data)
+        agent_jid, agent_data = list(agent_dict.items())[0]
+
+        try:
+            server_agents[agent_jid] = agent_data
+        except KeyError as e:
+            print(f"Couldn't add agent {agent_dict}, reason: {e}")
+
+        print(f"received agent: {agent_dict}, total: {len(server_agents)} agents")
         return flask.Response("", 201)
 
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -115,18 +124,23 @@ def main():
         Input("interval-component", "n_intervals"),
     )
     def update_graph(n_intervals):
-        G = nx.random_geometric_graph(128, 0.125)
+        # it's cleared after reading all pending messages
+        global server_message_queue
+
         edge_x = []
         edge_y = []
-        for edge in G.edges():
-            x0, y0 = G.nodes[edge[0]]["pos"]
-            x1, y1 = G.nodes[edge[1]]["pos"]
-            edge_x.append(x0)
-            edge_x.append(x1)
-            edge_x.append(None)
-            edge_y.append(y0)
-            edge_y.append(y1)
-            edge_y.append(None)
+        for msg_data in server_message_queue:
+            try:
+                x0, y0 = server_agents[msg_data["from_jid"]]["location"]
+                x1, y1 = server_agents[msg_data["to_jid"]]["location"]
+                edge_x.append(x0)
+                edge_x.append(x1)
+                edge_x.append(None)
+                edge_y.append(y0)
+                edge_y.append(y1)
+                edge_y.append(None)
+            except KeyError as e:
+                print(f"Data on server is incomplete for {msg_data}, reason: {e}")
 
         edge_trace = go.Scatter(
             x=edge_x,
@@ -138,10 +152,20 @@ def main():
 
         node_x = []
         node_y = []
-        for node in G.nodes():
-            x, y = G.nodes[node]["pos"]
-            node_x.append(x)
-            node_y.append(y)
+        node_neighbours_count = []
+        node_text = []
+        for agent_data in server_agents.values():
+            try:
+                x, y = agent_data["location"]
+                node_x.append(x)
+                node_y.append(y)
+                neighbours_count = agent_data["neighbours_count"]
+                node_neighbours_count.append(neighbours_count)
+                node_text.append(
+                    f"neighbours: {neighbours_count}, fakenews messages: {agent_data['fakenews_count']}, type: {agent_data['type']}"
+                )
+            except KeyError as e:
+                print(f"Data on server is incomplete for {agent_data}, reason: {e}")
 
         node_trace = go.Scatter(
             x=node_x,
@@ -150,17 +174,13 @@ def main():
             hoverinfo="text",
             marker=dict(
                 showscale=True,
-                # colorscale options
-                #'Greys' | 'YlGnBu' | 'Greens' | 'YlOrRd' | 'Bluered' | 'RdBu' |
-                #'Reds' | 'Blues' | 'Picnic' | 'Rainbow' | 'Portland' | 'Jet' |
-                #'Hot' | 'Blackbody' | 'Earth' | 'Electric' | 'Viridis' |
                 colorscale="YlGnBu",
                 reversescale=True,
                 color=[],
                 size=10,
                 colorbar=dict(
                     thickness=15,
-                    title="Node Connections",
+                    title="Node neighbours",
                     xanchor="left",
                     titleside="right",
                 ),
@@ -168,13 +188,7 @@ def main():
             ),
         )
 
-        node_adjacencies = []
-        node_text = []
-        for node, adjacencies in enumerate(G.adjacency()):
-            node_adjacencies.append(len(adjacencies[1]))
-            node_text.append("# of connections: " + str(len(adjacencies[1])))
-
-        node_trace.marker.color = node_adjacencies
+        node_trace.marker.color = node_neighbours_count
         node_trace.text = node_text
 
         fig = go.Figure(
@@ -183,7 +197,7 @@ def main():
                 titlefont_size=16,
                 showlegend=False,
                 hovermode="closest",
-                margin=dict(b=20, l=5, r=5, t=40),
+                margin=dict(b=20, l=5, r=5, t=20),
                 annotations=[
                     dict(
                         text="<a href='https://github.com/agent-systems-org/FakeNewsSimulator/'>Source</a>",
@@ -199,6 +213,7 @@ def main():
             ),
         )
 
+        server_message_queue = []
         return fig
 
     app.run_server(debug=True, host=HOST, port=PORT)
