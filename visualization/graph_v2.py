@@ -8,6 +8,8 @@ from dash.dependencies import Input, Output
 import networkx as nx
 
 
+HOST = "127.0.0.1"
+PORT = 8050
 refresh_interval_ms = 10000
 
 
@@ -199,7 +201,7 @@ def main():
 
         return fig
 
-    app.run_server(debug=True)
+    app.run_server(debug=True, host=HOST, port=PORT)
 
 
 if __name__ == "__main__":

@@ -1,9 +1,10 @@
 import threading
 import json
 import requests
+from .graph_v2 import HOST, PORT
 
 
-URL = "http://127.0.0.1:8050"
+URL = f"http://{HOST}:{PORT}"
 
 
 def send_post(url, json_data):
