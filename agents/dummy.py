@@ -20,6 +20,8 @@ class DummyAgent(Agent):
         self.location = location
         self.adj_list = adj_list
         self.graph_creator_jid = graph_creator_jid
+        self.type = "dummy"
+        self.fakenews_msgs = []
 
     def log(self, msg):
         full_date = datetime.datetime.now()
