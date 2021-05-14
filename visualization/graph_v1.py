@@ -1,3 +1,19 @@
+"""
+How to run:
+in the main loop add the following code (after starting the agents):
+    fig = plt.figure()
+    # matplotlib requires to use this '_' variable. don't ask why. it's python.
+    _ = animation.FuncAnimation(
+        fig,
+        visualize_network,
+        fargs=(graph_creator.agents,),
+        interval=math.sqrt(agents_count) * 1000,
+    )
+
+    # agents will start appearing while the GUI loop is running
+    plt.show()
+"""
+
 import networkx as nx
 import matplotlib.pyplot as plt
 
