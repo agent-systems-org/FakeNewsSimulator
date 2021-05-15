@@ -7,9 +7,9 @@ from spade.message import Message
 from visualization import post_agent, post_messages
 
 
-MAX_INITIAL_DELAY_SEC = 30
-MAX_SPREAD_INTERVAL_SEC = 120
-MAX_RECEIVE_TIME_SEC = 2137
+MAX_INITIAL_DELAY_SEC = 20
+MAX_SPREAD_INTERVAL_SEC = 60
+MAX_RECEIVE_TIME_SEC = 1000
 
 
 class Bot(Agent):
