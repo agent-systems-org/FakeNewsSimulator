@@ -39,6 +39,7 @@ def main():
             server_agents[agent_jid] = agent_data
         except KeyError as e:
             print(f"Couldn't add agent {agent_dict}, reason: {e}")
+            return flask.Response("", 418)
 
         print(f"received agent: {agent_dict}, total: {len(server_agents)} agents")
         return flask.Response("", 201)
@@ -55,9 +56,10 @@ def main():
                     id="refresh-interval-text",
                     children=f"Refresh interval: {refresh_interval_ms / 1000}s",
                 ),
+                html.Div(children="Change the refresh interval:"),
                 dcc.Slider(
                     id="refresh-interval-slider",
-                    min=0,
+                    min=100,
                     max=60 * 1000,
                     step=100,
                     value=refresh_interval_ms,
