@@ -64,6 +64,10 @@ def post_agent(agent):
         neighbours_count: number
         fakenews_count: number
         type: string
+
+    supported agent types:
+        "bot"
+        "common"
     """
     agent_data = {str(agent.jid): create_agent_dict(agent)}
     data = json.dumps(agent_data)
