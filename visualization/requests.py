@@ -30,6 +30,7 @@ def post_messages(msgs):
         "fakenews"
         "debunk"
     """
+
     msg_dicts = []
     for msg in msgs:
         msg_dicts.append(
@@ -58,6 +59,7 @@ def post_agent(agent):
         "bot"
         "common"
     """
+    
     agent_data = {
         str(agent.jid): {
             "location": agent.location,
