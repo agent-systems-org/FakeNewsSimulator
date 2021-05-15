@@ -14,14 +14,6 @@ def send_post(url, json_data):
         print(f"Couldn't post data to {url}")
 
 
-def create_msg_dict(msg):
-    return {
-        "from_jid": str(msg["from_jid"]),
-        "to_jid": str(msg["to_jid"]),
-        "type": msg["type"],
-    }
-
-
 def post_messages(msgs):
     """
     non-blocking
@@ -40,19 +32,16 @@ def post_messages(msgs):
     """
     msg_dicts = []
     for msg in msgs:
-        msg_dicts.append(create_msg_dict(msg))
+        msg_dicts.append(
+            {
+                "from_jid": str(msg["from_jid"]),
+                "to_jid": str(msg["to_jid"]),
+                "type": msg["type"],
+            }
+        )
 
     data = json.dumps(msg_dicts)
     threading.Thread(target=send_post, args=(URL + "/messages", data)).start()
-
-
-def create_agent_dict(agent):
-    return {
-        "location": agent.location,
-        "neighbours_count": len(agent.adj_list),
-        "fakenews_count": len(agent.fakenews_msgs),
-        "type": agent.type,
-    }
 
 
 def post_agent(agent):
@@ -69,6 +58,13 @@ def post_agent(agent):
         "bot"
         "common"
     """
-    agent_data = {str(agent.jid): create_agent_dict(agent)}
+    agent_data = {
+        str(agent.jid): {
+            "location": agent.location,
+            "neighbours_count": len(agent.adj_list),
+            "fakenews_count": len(agent.fakenews_msgs),
+            "type": agent.type,
+        }
+    }
     data = json.dumps(agent_data)
     threading.Thread(target=send_post, args=(URL + "/agents", data)).start()
