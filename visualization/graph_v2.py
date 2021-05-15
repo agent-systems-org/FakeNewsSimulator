@@ -129,6 +129,8 @@ def main():
 
         edge_x = []
         edge_y = []
+        edge_text = []
+        arrows = []
         for msg_data in server_message_queue:
             try:
                 x0, y0 = server_agents[msg_data["from_jid"]]["location"]
@@ -139,6 +141,21 @@ def main():
                 edge_y.append(y0)
                 edge_y.append(y1)
                 edge_y.append(None)
+                edge_text.append(f"type: {msg_data['type']}")
+                arrows.append(
+                    dict(
+                        ax=x0,
+                        ay=y0,
+                        axref="x",
+                        ayref="y",
+                        x=x1,
+                        y=y1,
+                        xref="x",
+                        yref="y",
+                        showarrow=True,
+                        arrowhead=1,
+                    )
+                )
             except KeyError as e:
                 print(f"Data on server is incomplete for {msg_data}, reason: {e}")
 
@@ -154,6 +171,7 @@ def main():
         node_y = []
         node_neighbours_count = []
         node_text = []
+        markers = []
         for agent_data in server_agents.values():
             try:
                 x, y = agent_data["location"]
@@ -164,12 +182,21 @@ def main():
                 node_text.append(
                     f"neighbours: {neighbours_count}, fakenews messages: {agent_data['fakenews_count']}, type: {agent_data['type']}"
                 )
+
+                agent_type = agent_data["type"]
+                if agent_type == "common":
+                    markers.append("circle")
+                elif agent_type == "bot":
+                    markers.append("square")
+                else:
+                    markers.append("x-thin")
             except KeyError as e:
                 print(f"Data on server is incomplete for {agent_data}, reason: {e}")
 
         node_trace = go.Scatter(
             x=node_x,
             y=node_y,
+            marker_symbol=markers,
             mode="markers",
             hoverinfo="text",
             marker=dict(
@@ -191,6 +218,17 @@ def main():
         node_trace.marker.color = node_neighbours_count
         node_trace.text = node_text
 
+        annotations = arrows + [
+            dict(
+                text="<a href='https://github.com/agent-systems-org/FakeNewsSimulator/'>Source</a>",
+                showarrow=False,
+                xref="paper",
+                yref="paper",
+                x=0.005,
+                y=-0.002,
+            )
+        ]
+
         fig = go.Figure(
             data=[edge_trace, node_trace],
             layout=go.Layout(
@@ -198,16 +236,7 @@ def main():
                 showlegend=False,
                 hovermode="closest",
                 margin=dict(b=20, l=5, r=5, t=20),
-                annotations=[
-                    dict(
-                        text="<a href='https://github.com/agent-systems-org/FakeNewsSimulator/'>Source</a>",
-                        showarrow=False,
-                        xref="paper",
-                        yref="paper",
-                        x=0.005,
-                        y=-0.002,
-                    )
-                ],
+                annotations=annotations,
                 xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             ),
