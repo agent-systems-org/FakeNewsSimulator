@@ -1,6 +1,7 @@
 """
 How to run:
-in the main loop add the following code (after starting the agents):
+in the main loop add the following code (after starting the agents,
+instead of the loop with 'time.sleep' as it starts the blocking GUI loop):
     fig = plt.figure()
     # matplotlib requires to use this '_' variable. don't ask why. it's python.
     _ = animation.FuncAnimation(
