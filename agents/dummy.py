@@ -20,7 +20,7 @@ class DummyAgent(Agent):
         self.location = location
         self.adj_list = adj_list
         self.graph_creator_jid = graph_creator_jid
-        self.type = "dummy"
+        self.type = "bot"  # temporary
         self.fakenews_msgs = []
 
     def log(self, msg):
@@ -30,7 +30,7 @@ class DummyAgent(Agent):
 
     async def setup(self):
         self.log(
-            f"dummy, location: {self.location}, neighbours: {self.adj_list}, created by: {self.graph_creator_jid}"
+            f"dummy, location: {self.location}, neighbours: {len(self.adj_list)}, created by: {self.graph_creator_jid}"
         )
 
         get_neighbours_behaviour = self.GetNeighboursBehaviour()
@@ -51,7 +51,7 @@ class DummyAgent(Agent):
             if msg:
                 body_json = json.loads(msg.body)
                 self.agent.log(
-                    f"neighbours received from querying graph creator: {body_json['neighbours']}"
+                    f"neighbours received from querying graph creator: {len(body_json['neighbours'])}"
                 )
             else:
                 self.agent.log(

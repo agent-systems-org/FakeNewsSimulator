@@ -29,7 +29,7 @@ class Bot(Agent):
 
     async def setup(self):
         self.log(
-            f"bot, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {self.adj_list}, fakenews: {self.fakenews_msgs}"
+            f"bot, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {len(self.adj_list)}, fakenews: {len(self.fakenews_msgs)}"
         )
 
         start_at = datetime.datetime.now() + datetime.timedelta(seconds=self.delay)
