@@ -50,6 +50,7 @@ def main():
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
 
     app = dash.Dash(__name__, external_stylesheets=external_stylesheets, server=server)
+    app.title = "Fakenews Simulator"
     app.layout = html.Div(
         html.Div(
             [
