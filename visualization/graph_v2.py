@@ -67,7 +67,7 @@ def main():
                 html.Div(id="state-text"),
                 html.Button("stop", id="stop-button"),
                 html.Button("resume", id="resume-button"),
-                dcc.Graph(id="graph"),
+                dcc.Graph(id="graph", style={"height": "100vh"}),
                 dcc.Interval(
                     id="interval-component",
                     interval=refresh_interval_ms,
@@ -134,6 +134,16 @@ def main():
                 titlefont_size=16,
                 showlegend=False,
                 hovermode="closest",
+                annotations=[
+                    dict(
+                        text="<a href='https://github.com/agent-systems-org/FakeNewsSimulator/'>Source</a>",
+                        showarrow=False,
+                        xref="paper",
+                        yref="paper",
+                        x=0.005,
+                        y=-0.002,
+                    )
+                ],
                 margin=dict(b=20, l=5, r=5, t=20),
                 xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
@@ -152,7 +162,6 @@ def main():
                 "style": dict(width=0.5, color="rgb(0,255,0)"),
             },
         }
-        arrows = []
         for msg_data in server_message_queue:
             try:
                 x0, y0 = server_agents[msg_data["from_jid"]]["location"]
@@ -164,37 +173,8 @@ def main():
                 edges[msg_type]["edge_y"].append(y0)
                 edges[msg_type]["edge_y"].append(y1)
                 edges[msg_type]["edge_y"].append(None)
-
-                arrows.append(
-                    dict(
-                        ax=x0,
-                        ay=y0,
-                        axref="x",
-                        ayref="y",
-                        x=x1,
-                        y=y1,
-                        xref="x",
-                        yref="y",
-                        showarrow=True,
-                        opacity=0.5,
-                        arrowhead=1,
-                    )
-                )
             except KeyError as e:
                 print(f"Data on server is incomplete for {msg_data}, reason: {e}")
-
-        annotations = arrows + [
-            dict(
-                text="<a href='https://github.com/agent-systems-org/FakeNewsSimulator/'>Source</a>",
-                showarrow=False,
-                xref="paper",
-                yref="paper",
-                x=0.005,
-                y=-0.002,
-            )
-        ]
-
-        fig.layout.annotations = annotations
 
         for edge_type_dict in edges.values():
             edge_trace = go.Scatter(
