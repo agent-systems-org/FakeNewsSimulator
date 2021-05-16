@@ -1,12 +1,8 @@
 import concurrent
 import time
 import sys
-import math
 from spade import quit_spade
-import matplotlib.animation as animation
-import matplotlib.pyplot as plt
 from agents import GraphCreator
-from visualization import visualize_network
 
 
 AGENTS_DEFAULT_COUNT = 8
