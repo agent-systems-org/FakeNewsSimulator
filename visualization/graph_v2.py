@@ -1,3 +1,7 @@
+import sys
+import os
+import threading
+import webbrowser
 import json
 import flask
 import dash
@@ -5,14 +9,13 @@ import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
-import networkx as nx
 
 
 HOST = "127.0.0.1"
 PORT = 8050
-refresh_interval_ms = 10000
-server_message_queue = []
-server_agents = {}
+REFRESH_INTERVAL_MS = 10000
+SERVER_MESSAGE_QUEUE = []
+SERVER_AGENTS = {}
 
 
 def main():
@@ -23,9 +26,9 @@ def main():
         msgs = json.loads(flask.request.data)
 
         for msg in msgs:
-            server_message_queue.append(msg)
+            SERVER_MESSAGE_QUEUE.append(msg)
             print(
-                f"received msg: {msg}, current queue: {len(server_message_queue)} msgs"
+                f"received msg: {msg}, current queue: {len(SERVER_MESSAGE_QUEUE)} msgs"
             )
 
         return flask.Response("", 201)
@@ -36,12 +39,12 @@ def main():
         agent_jid, agent_data = list(agent_dict.items())[0]
 
         try:
-            server_agents[agent_jid] = agent_data
+            SERVER_AGENTS[agent_jid] = agent_data
         except KeyError as e:
             print(f"Couldn't add agent {agent_dict}, reason: {e}")
             return flask.Response("", 418)
 
-        print(f"received agent: {agent_dict}, total: {len(server_agents)} agents")
+        print(f"received agent: {agent_dict}, total: {len(SERVER_AGENTS)} agents")
         return flask.Response("", 201)
 
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -54,7 +57,7 @@ def main():
                 html.Div(id="epoch-text"),
                 html.Div(
                     id="refresh-interval-text",
-                    children=f"Refresh interval: {refresh_interval_ms / 1000}s",
+                    children=f"Refresh interval: {REFRESH_INTERVAL_MS / 1000}s",
                 ),
                 html.Div(children="Change the refresh interval:"),
                 dcc.Slider(
@@ -62,7 +65,7 @@ def main():
                     min=100,
                     max=60 * 1000,
                     step=100,
-                    value=refresh_interval_ms,
+                    value=REFRESH_INTERVAL_MS,
                 ),
                 html.Div(id="state-text"),
                 html.Button("stop", id="stop-button"),
@@ -70,7 +73,7 @@ def main():
                 dcc.Graph(id="graph", style={"height": "100vh"}),
                 dcc.Interval(
                     id="interval-component",
-                    interval=refresh_interval_ms,
+                    interval=REFRESH_INTERVAL_MS,
                     n_intervals=0,
                 ),
             ]
@@ -91,28 +94,28 @@ def main():
         ],
     )
     def modify_interval(stop, resume, slider_value_ms):
-        global refresh_interval_ms
+        global REFRESH_INTERVAL_MS
         context = dash.callback_context
 
         if (
             not context.triggered
             or context.triggered[0]["prop_id"].split(".")[0] == "resume-button"
         ):
-            refresh_interval_text = f"Refresh interval: {refresh_interval_ms / 1000}s"
+            refresh_interval_text = f"Refresh interval: {REFRESH_INTERVAL_MS / 1000}s"
             state_text = "State: running"
-            return [refresh_interval_ms, refresh_interval_text, state_text]
+            return [REFRESH_INTERVAL_MS, refresh_interval_text, state_text]
 
         elif context.triggered[0]["prop_id"].split(".")[0] == "stop-button":
             # it's impossible to stop the interval completely so I set it to a big value
-            refresh_interval_text = f"Refresh interval: {refresh_interval_ms / 1000}s"
+            refresh_interval_text = f"Refresh interval: {REFRESH_INTERVAL_MS / 1000}s"
             state_text = "State: stopped"
             return [1000 * 60 * 60 * 24 * 365, refresh_interval_text, state_text]
 
         else:
-            refresh_interval_ms = slider_value_ms
-            refresh_interval_text = f"Refresh interval: {refresh_interval_ms / 1000}s"
+            REFRESH_INTERVAL_MS = slider_value_ms
+            refresh_interval_text = f"Refresh interval: {REFRESH_INTERVAL_MS / 1000}s"
             state_text = "State: running"
-            return [refresh_interval_ms, refresh_interval_text, state_text]
+            return [REFRESH_INTERVAL_MS, refresh_interval_text, state_text]
 
     @app.callback(
         Output("epoch-text", "children"),
@@ -127,7 +130,7 @@ def main():
     )
     def update_graph(n_intervals):
         # it's cleared after reading all pending messages
-        global server_message_queue
+        global SERVER_MESSAGE_QUEUE
 
         fig = go.Figure(
             layout=go.Layout(
@@ -162,10 +165,10 @@ def main():
                 "style": dict(width=0.5, color="rgb(0,255,0)"),
             },
         }
-        for msg_data in server_message_queue:
+        for msg_data in SERVER_MESSAGE_QUEUE:
             try:
-                x0, y0 = server_agents[msg_data["from_jid"]]["location"]
-                x1, y1 = server_agents[msg_data["to_jid"]]["location"]
+                x0, y0 = SERVER_AGENTS[msg_data["from_jid"]]["location"]
+                x1, y1 = SERVER_AGENTS[msg_data["to_jid"]]["location"]
                 msg_type = msg_data["type"]
                 edges[msg_type]["edge_x"].append(x0)
                 edges[msg_type]["edge_x"].append(x1)
@@ -173,6 +176,7 @@ def main():
                 edges[msg_type]["edge_y"].append(y0)
                 edges[msg_type]["edge_y"].append(y1)
                 edges[msg_type]["edge_y"].append(None)
+
             except KeyError as e:
                 print(f"Data on server is incomplete for {msg_data}, reason: {e}")
 
@@ -186,62 +190,90 @@ def main():
             )
             fig.add_trace(edge_trace)
 
-        node_x = []
-        node_y = []
-        node_neighbours_count = []
-        node_text = []
-        markers = []
-        for agent_data in server_agents.values():
-            try:
-                x, y = agent_data["location"]
-                node_x.append(x)
-                node_y.append(y)
-                neighbours_count = agent_data["neighbours_count"]
-                node_neighbours_count.append(neighbours_count)
-                node_text.append(
-                    f"neighbours: {neighbours_count}, fakenews messages: {agent_data['fakenews_count']}, type: {agent_data['type']}"
-                )
+        # prevents race conditions
+        agents_data_copy = list(SERVER_AGENTS.values())
 
-                agent_type = agent_data["type"]
-                if agent_type == "common":
-                    markers.append("circle")
-                elif agent_type == "bot":
-                    markers.append("square")
-                else:
-                    markers.append("x-thin")
+        max_neighbours = -sys.maxsize
+        min_neighbours = sys.maxsize
+        for agent_data in agents_data_copy:
+            try:
+                if agent_data["neighbours_count"] < min_neighbours:
+                    min_neighbours = agent_data["neighbours_count"]
+
+                elif agent_data["neighbours_count"] > max_neighbours:
+                    max_neighbours = agent_data["neighbours_count"]
+
             except KeyError as e:
                 print(f"Data on server is incomplete for {agent_data}, reason: {e}")
 
-        node_trace = go.Scatter(
-            x=node_x,
-            y=node_y,
-            marker_symbol=markers,
-            mode="markers",
-            hoverinfo="text",
-            text=node_text,
-            marker=dict(
-                showscale=True,
-                colorscale="YlGnBu",
-                reversescale=True,
-                color=node_neighbours_count,
-                size=10,
-                colorbar=dict(
-                    thickness=15,
-                    title="Node neighbours",
-                    xanchor="left",
-                    titleside="right",
-                ),
-                line_width=2,
-            ),
+        if max_neighbours != min_neighbours:
+            marker_max_size = 18
+            marker_min_size = 3
+            a_marker_coeff = (marker_max_size - marker_min_size) / (
+                max_neighbours - min_neighbours
+            )
+            b_marker_coeff = marker_max_size - max_neighbours * a_marker_coeff
+            get_marker_size = lambda n_count: n_count * a_marker_coeff + b_marker_coeff
+        else:
+            get_marker_size = lambda n_count: 10
+
+        max_susceptibility = 100
+        min_susceptibility = 0
+        max_saturation = 100
+        min_saturation = 25
+        a_sus_coeff = (max_saturation - min_saturation) / (
+            max_susceptibility - min_susceptibility
         )
+        b_sus_coeff = max_saturation - max_susceptibility * a_sus_coeff
+        get_saturation = lambda sus: sus * a_sus_coeff + b_sus_coeff
 
-        fig.add_trace(node_trace)
+        for agent_data in agents_data_copy:
+            try:
+                x, y = agent_data["location"]
 
-        server_message_queue = []
+                agent_type = agent_data["type"]
+                if agent_type == "common":
+                    marker_symbol = "circle"
+                elif agent_type == "bot":
+                    marker_symbol = "square"
+                else:
+                    marker_symbol = "x-thin"
+
+                # TODO add more colors (hue values) for different topics
+                susceptible_topic = agent_data["susceptible_topic"]
+                susceptibility = agent_data["susceptibility"]
+                if susceptible_topic == "test":
+                    hue = 150
+
+                color = f"hsv({hue},{get_saturation(susceptibility)}%,100%)"
+
+                neighbours_count = agent_data["neighbours_count"]
+
+                node_trace = go.Scatter(
+                    x=[x],
+                    y=[y],
+                    marker_symbol=marker_symbol,
+                    marker=dict(size=get_marker_size(neighbours_count), color=color),
+                    mode="markers",
+                    hoverinfo="text",
+                    text=f"neighbours: {neighbours_count}, susceptible topic: {susceptible_topic}, susceptibility: {susceptibility}, type: {agent_data['type']}",
+                )
+                fig.add_trace(node_trace)
+
+            except KeyError as e:
+                print(f"Data on server is incomplete for {agent_data}, reason: {e}")
+
+        SERVER_MESSAGE_QUEUE = []
         return fig
 
     app.run_server(debug=True, host=HOST, port=PORT)
 
 
+def open_new_tab():
+    if not os.environ.get("WERKZEUG_RUN_MAIN"):
+        webbrowser.open_new_tab(f"http://{HOST}:{PORT}")
+
+
 if __name__ == "__main__":
+    threading.Timer(1, open_new_tab).start()
     main()
