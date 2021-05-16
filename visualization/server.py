@@ -209,8 +209,8 @@ def main():
                 print(f"Data on server is incomplete for {agent_data}, reason: {e}")
 
         if max_neighbours != min_neighbours:
-            marker_max_size = 18
-            marker_min_size = 3
+            marker_max_size = 20
+            marker_min_size = 5
             a_marker_coeff = (marker_max_size - marker_min_size) / (
                 max_neighbours - min_neighbours
             )
@@ -239,7 +239,7 @@ def main():
                 elif agent_type == "bot":
                     marker_symbol = "square"
                 else:
-                    marker_symbol = "x-thin"
+                    marker_symbol = "x"
 
                 # TODO add more colors (hue values) for different topics
                 susceptible_topic = agent_data["susceptible_topic"]
@@ -258,7 +258,7 @@ def main():
                     marker=dict(size=get_marker_size(neighbours_count), color=color),
                     mode="markers",
                     hoverinfo="text",
-                    text=f"neighbours: {neighbours_count}, susceptible topic: {susceptible_topic}, susceptibility: {susceptibility}, type: {agent_data['type']}",
+                    text=f"followers: {neighbours_count}, susceptible topic: {susceptible_topic}, susceptibility: {susceptibility}, type: {agent_data['type']}",
                 )
                 fig.add_trace(node_trace)
 
