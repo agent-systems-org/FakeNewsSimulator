@@ -209,8 +209,8 @@ def main():
             )
             fig.add_trace(edge_trace)
 
-        # prevents race conditions
         if SERVER_AGENTS:
+            # prevents race conditions
             agents_data_copy = list(SERVER_AGENTS.values())
         else:
             agents_data_copy = []
