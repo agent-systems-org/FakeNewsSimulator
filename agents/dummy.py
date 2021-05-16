@@ -21,8 +21,9 @@ class DummyAgent(Agent):
         self.location = location
         self.adj_list = adj_list
         self.graph_creator_jid = graph_creator_jid
-        self.type = "bot"  # temporary
+        self.type = "dummy"
         self.susceptibility = random.randint(0, 100)
+        self.susceptible_topic = "test"
 
     def log(self, msg):
         full_date = datetime.datetime.now()
@@ -31,7 +32,7 @@ class DummyAgent(Agent):
 
     async def setup(self):
         self.log(
-            f"dummy, susceptibility: {self.susceptibility}, location: {self.location}, neighbours: {len(self.adj_list)}, created by: {self.graph_creator_jid}"
+            f"dummy, susceptibility: {self.susceptibility}, susceptible topic: {self.susceptible_topic}, location: {self.location}, neighbours: {len(self.adj_list)}, created by: {self.graph_creator_jid}"
         )
 
         get_neighbours_behaviour = self.GetNeighboursBehaviour()
@@ -56,7 +57,7 @@ class DummyAgent(Agent):
                 )
             else:
                 self.agent.log(
-                    f"querying graph creator resulted in either timeout or empty message"
+                    "querying graph creator resulted in either timeout or empty message"
                 )
 
     class SendSelfToVisualization(PeriodicBehaviour):
