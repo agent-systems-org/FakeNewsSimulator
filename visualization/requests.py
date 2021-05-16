@@ -53,11 +53,15 @@ def post_agent(agent):
         location: tuple (x, y)
         neighbours_count: number
         susceptibility: number [0; 100]
+        susceptible_topic: string
         type: string
 
     supported agent types:
         "bot"
         "common"
+
+    supported susceptible topics:
+        "test"
     """
 
     agent_data = {
@@ -65,6 +69,7 @@ def post_agent(agent):
             "location": agent.location,
             "neighbours_count": len(agent.adj_list),
             "susceptibility": agent.susceptibility,
+            "susceptible_topic": agent.susceptible_topic,
             "type": agent.type,
         }
     }
