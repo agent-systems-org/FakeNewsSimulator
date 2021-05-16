@@ -180,6 +180,8 @@ def main():
             except KeyError as e:
                 print(f"Data on server is incomplete for {msg_data}, reason: {e}")
 
+        SERVER_MESSAGE_QUEUE = []
+
         for edge_type_dict in edges.values():
             edge_trace = go.Scatter(
                 x=edge_type_dict["edge_x"],
@@ -263,7 +265,6 @@ def main():
             except KeyError as e:
                 print(f"Data on server is incomplete for {agent_data}, reason: {e}")
 
-        SERVER_MESSAGE_QUEUE = []
         return fig
 
     app.run_server(debug=True, host=HOST, port=PORT)
