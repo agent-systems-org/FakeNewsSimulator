@@ -122,8 +122,7 @@ def main():
 
     @app.callback(
         Output("epoch-text", "children"),
-        [Input("interval-component", "n_intervals"),
-        Input("clean-button", "n_clicks")]
+        [Input("interval-component", "n_intervals"), Input("clean-button", "n_clicks")],
     )
     def update_epoch(n_intervals, n_clicks):
         global SERVER_MESSAGE_QUEUE
