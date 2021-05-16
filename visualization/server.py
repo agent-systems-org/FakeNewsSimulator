@@ -1,5 +1,6 @@
 import sys
 import os
+import datetime
 import threading
 import webbrowser
 import json
@@ -29,7 +30,7 @@ def main():
         for msg in msgs:
             SERVER_MESSAGE_QUEUE.append(msg)
             print(
-                f"received msg: {msg}, current queue: {len(SERVER_MESSAGE_QUEUE)} msgs"
+                f"received msg. current queue: {len(SERVER_MESSAGE_QUEUE)} msgs, msg: {msg}"
             )
 
         return flask.Response("", 201)
@@ -45,7 +46,9 @@ def main():
             print(f"Couldn't add agent {agent_dict}, reason: {e}")
             return flask.Response("", 418)
 
-        print(f"received agent: {agent_dict}, total: {len(SERVER_AGENTS)} agents")
+        print(
+            f"received agent. total: {len(SERVER_AGENTS)} agents, agent: {agent_dict}"
+        )
         return flask.Response("", 201)
 
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -64,7 +67,7 @@ def main():
                 html.Div(children="Change the refresh interval:"),
                 dcc.Slider(
                     id="refresh-interval-slider",
-                    min=100,
+                    min=1000,
                     max=60 * 1000,
                     step=100,
                     value=REFRESH_INTERVAL_MS,
@@ -147,6 +150,9 @@ def main():
     def update_graph(n_intervals):
         # it's cleared after reading all pending messages
         global SERVER_MESSAGE_QUEUE
+
+        print("updating graph...")
+        start_time = datetime.datetime.now()
 
         fig = go.Figure(
             layout=go.Layout(
@@ -283,6 +289,9 @@ def main():
 
             except KeyError as e:
                 print(f"Data on server is incomplete for {agent_data}, reason: {e}")
+
+        elapsed_time = datetime.datetime.now() - start_time
+        print(f"done updating graph ({int(elapsed_time.total_seconds() * 1000)} ms).")
 
         return fig
 
