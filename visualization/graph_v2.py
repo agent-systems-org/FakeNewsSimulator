@@ -129,21 +129,42 @@ def main():
         # it's cleared after reading all pending messages
         global server_message_queue
 
-        edge_x = []
-        edge_y = []
-        edge_text = []
+        fig = go.Figure(
+            layout=go.Layout(
+                titlefont_size=16,
+                showlegend=False,
+                hovermode="closest",
+                margin=dict(b=20, l=5, r=5, t=20),
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            ),
+        )
+
+        edges = {
+            "fakenews": {
+                "edge_x": [],
+                "edge_y": [],
+                "style": dict(width=0.5, color="rgb(255,0,0)"),
+            },
+            "debunk": {
+                "edge_x": [],
+                "edge_y": [],
+                "style": dict(width=0.5, color="rgb(0,255,0)"),
+            },
+        }
         arrows = []
         for msg_data in server_message_queue:
             try:
                 x0, y0 = server_agents[msg_data["from_jid"]]["location"]
                 x1, y1 = server_agents[msg_data["to_jid"]]["location"]
-                edge_x.append(x0)
-                edge_x.append(x1)
-                edge_x.append(None)
-                edge_y.append(y0)
-                edge_y.append(y1)
-                edge_y.append(None)
-                edge_text.append(f"type: {msg_data['type']}")
+                msg_type = msg_data["type"]
+                edges[msg_type]["edge_x"].append(x0)
+                edges[msg_type]["edge_x"].append(x1)
+                edges[msg_type]["edge_x"].append(None)
+                edges[msg_type]["edge_y"].append(y0)
+                edges[msg_type]["edge_y"].append(y1)
+                edges[msg_type]["edge_y"].append(None)
+
                 arrows.append(
                     dict(
                         ax=x0,
@@ -155,19 +176,35 @@ def main():
                         xref="x",
                         yref="y",
                         showarrow=True,
+                        opacity=0.5,
                         arrowhead=1,
                     )
                 )
             except KeyError as e:
                 print(f"Data on server is incomplete for {msg_data}, reason: {e}")
 
-        edge_trace = go.Scatter(
-            x=edge_x,
-            y=edge_y,
-            line=dict(width=0.5, color="#888"),
-            hoverinfo="none",
-            mode="lines",
-        )
+        annotations = arrows + [
+            dict(
+                text="<a href='https://github.com/agent-systems-org/FakeNewsSimulator/'>Source</a>",
+                showarrow=False,
+                xref="paper",
+                yref="paper",
+                x=0.005,
+                y=-0.002,
+            )
+        ]
+
+        fig.layout.annotations = annotations
+
+        for edge_type_dict in edges.values():
+            edge_trace = go.Scatter(
+                x=edge_type_dict["edge_x"],
+                y=edge_type_dict["edge_y"],
+                line=edge_type_dict["style"],
+                hoverinfo="none",
+                mode="lines",
+            )
+            fig.add_trace(edge_trace)
 
         node_x = []
         node_y = []
@@ -201,11 +238,12 @@ def main():
             marker_symbol=markers,
             mode="markers",
             hoverinfo="text",
+            text=node_text,
             marker=dict(
                 showscale=True,
                 colorscale="YlGnBu",
                 reversescale=True,
-                color=[],
+                color=node_neighbours_count,
                 size=10,
                 colorbar=dict(
                     thickness=15,
@@ -217,32 +255,7 @@ def main():
             ),
         )
 
-        node_trace.marker.color = node_neighbours_count
-        node_trace.text = node_text
-
-        annotations = arrows + [
-            dict(
-                text="<a href='https://github.com/agent-systems-org/FakeNewsSimulator/'>Source</a>",
-                showarrow=False,
-                xref="paper",
-                yref="paper",
-                x=0.005,
-                y=-0.002,
-            )
-        ]
-
-        fig = go.Figure(
-            data=[edge_trace, node_trace],
-            layout=go.Layout(
-                titlefont_size=16,
-                showlegend=False,
-                hovermode="closest",
-                margin=dict(b=20, l=5, r=5, t=20),
-                annotations=annotations,
-                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            ),
-        )
+        fig.add_trace(node_trace)
 
         server_message_queue = []
         return fig
