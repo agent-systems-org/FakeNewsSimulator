@@ -59,7 +59,7 @@ def post_agent(agent):
         "bot"
         "common"
     """
-    
+
     agent_data = {
         str(agent.jid): {
             "location": agent.location,
