@@ -16,6 +16,7 @@ PORT = 8050
 REFRESH_INTERVAL_MS = 10000
 SERVER_MESSAGE_QUEUE = []
 SERVER_AGENTS = {}
+EPOCH = 0
 
 
 def main():
@@ -71,6 +72,7 @@ def main():
                 html.Div(id="state-text"),
                 html.Button("stop", id="stop-button"),
                 html.Button("resume", id="resume-button"),
+                html.Button("clean", id="clean-button"),
                 dcc.Graph(id="graph", style={"height": "100vh"}),
                 dcc.Interval(
                     id="interval-component",
@@ -120,10 +122,24 @@ def main():
 
     @app.callback(
         Output("epoch-text", "children"),
-        Input("interval-component", "n_intervals"),
+        [Input("interval-component", "n_intervals"),
+        Input("clean-button", "n_clicks")]
     )
-    def update_epoch(n_intervals):
-        return html.Span(f"Epoch: {n_intervals}")
+    def update_epoch(n_intervals, n_clicks):
+        global SERVER_MESSAGE_QUEUE
+        global SERVER_AGENTS
+        global EPOCH
+
+        context = dash.callback_context
+
+        if context.triggered[0]["prop_id"].split(".")[0] == "clean-button":
+            SERVER_MESSAGE_QUEUE = []
+            SERVER_AGENTS = {}
+            EPOCH = 1
+        else:
+            EPOCH += 1
+
+        return html.Span(f"Epoch: {EPOCH}")
 
     @app.callback(
         Output("graph", "figure"),
@@ -194,7 +210,10 @@ def main():
             fig.add_trace(edge_trace)
 
         # prevents race conditions
-        agents_data_copy = list(SERVER_AGENTS.values())
+        if SERVER_AGENTS:
+            agents_data_copy = list(SERVER_AGENTS.values())
+        else:
+            agents_data_copy = []
 
         max_neighbours = -sys.maxsize
         min_neighbours = sys.maxsize
