@@ -59,6 +59,7 @@ def post_agent(agent):
     supported agent types:
         "bot"
         "common"
+    unknown type will be displayed as 'X'
 
     supported susceptible topics:
         "test"
