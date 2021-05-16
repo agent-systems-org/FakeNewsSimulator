@@ -1,7 +1,7 @@
 import threading
 import json
 import requests
-from .graph_v2 import HOST, PORT
+from .server import HOST, PORT
 
 
 URL = f"http://{HOST}:{PORT}"
