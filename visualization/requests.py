@@ -52,7 +52,7 @@ def post_agent(agent):
     agent must have following properties:
         location: tuple (x, y)
         neighbours_count: number
-        fakenews_count: number
+        susceptibility: number [0; 100]
         type: string
 
     supported agent types:
@@ -64,7 +64,7 @@ def post_agent(agent):
         str(agent.jid): {
             "location": agent.location,
             "neighbours_count": len(agent.adj_list),
-            "fakenews_count": len(agent.fakenews_msgs),
+            "susceptibility": agent.susceptibility,
             "type": agent.type,
         }
     }

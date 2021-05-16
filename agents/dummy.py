@@ -1,3 +1,4 @@
+import random
 import datetime
 import json
 from spade.agent import Agent
@@ -21,7 +22,7 @@ class DummyAgent(Agent):
         self.adj_list = adj_list
         self.graph_creator_jid = graph_creator_jid
         self.type = "bot"  # temporary
-        self.fakenews_msgs = []
+        self.susceptibility = random.randint(0, 100)
 
     def log(self, msg):
         full_date = datetime.datetime.now()
@@ -30,7 +31,7 @@ class DummyAgent(Agent):
 
     async def setup(self):
         self.log(
-            f"dummy, location: {self.location}, neighbours: {len(self.adj_list)}, created by: {self.graph_creator_jid}"
+            f"dummy, susceptibility: {self.susceptibility}, location: {self.location}, neighbours: {len(self.adj_list)}, created by: {self.graph_creator_jid}"
         )
 
         get_neighbours_behaviour = self.GetNeighboursBehaviour()

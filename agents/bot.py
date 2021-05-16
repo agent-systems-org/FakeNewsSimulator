@@ -21,6 +21,7 @@ class Bot(Agent):
         self.period = random.randint(1, MAX_SPREAD_INTERVAL_SEC)
         self.fakenews_msgs = []
         self.type = "bot"
+        self.susceptibility = 100
 
     def log(self, msg):
         full_date = datetime.datetime.now()
@@ -29,7 +30,7 @@ class Bot(Agent):
 
     async def setup(self):
         self.log(
-            f"bot, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {len(self.adj_list)}, fakenews: {len(self.fakenews_msgs)}"
+            f"bot, susceptibility: {self.susceptibility}, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {len(self.adj_list)}, fakenews: {len(self.fakenews_msgs)}"
         )
 
         start_at = datetime.datetime.now() + datetime.timedelta(seconds=self.delay)
