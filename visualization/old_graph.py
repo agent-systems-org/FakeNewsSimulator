@@ -1,5 +1,7 @@
 """
-How to run:
+it may be used as a tool to visualize connections inside the network
+
+how to run:
 in the main loop add the following code (after starting the agents,
 instead of the loop with 'time.sleep' as it starts the blocking GUI loop):
     fig = plt.figure()
