@@ -5,6 +5,10 @@ how to run:
 in the main loop add the following code (after starting the agents,
 instead of the loop with 'time.sleep' as it starts the blocking GUI loop):
 
+    import math
+    import matplotlib.pyplot as plt
+    from matplotlib import animation
+
     fig = plt.figure()
     # matplotlib requires to use this '_' variable. don't ask why. it's python.
     _ = animation.FuncAnimation(
@@ -39,9 +43,8 @@ def visualize_connections(epoch, agents):
         graph.add_node(
             get_id(agent.jid),
             attr_dict={
-                "fakenews": 0,
-                "state": "dummy",
-                "neighbours": len(agent.adj_list),
+                "type": agent.type,
+                "followers": len(agent.adj_list),
             },
             pos=(agent.location),
         )
@@ -83,9 +86,8 @@ def visualize_connections(epoch, agents):
     for node, attr_dict in zip(graph.nodes(), attr_dict.values()):
         labels[node] = {
             "id": node,
-            "f": attr_dict["fakenews"],
-            "s": attr_dict["state"],
-            "n": attr_dict["neighbours"],
+            "t": attr_dict["type"],
+            "f": attr_dict["followers"],
         }
 
     nx.draw_networkx_labels(
@@ -93,9 +95,8 @@ def visualize_connections(epoch, agents):
     )
 
     legend = """
-    f - fakenews messages count
-    s - state
-    n - neighbours count
+    t - type
+    f - followers count
     """
     plt.text(0.02, 0.5, legend, fontsize=14, transform=plt.gcf().transFigure)
     plt.get_current_fig_manager().set_window_title("Fake news simulator")
