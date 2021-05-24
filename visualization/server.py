@@ -1,5 +1,6 @@
 import sys
 import os
+import getopt
 import datetime
 import threading
 import webbrowser
@@ -15,12 +16,54 @@ from dash.dependencies import Input, Output
 HOST = "127.0.0.1"
 PORT = 8050
 REFRESH_INTERVAL_MS = 10000
+MIN_REFRESH_INTERVAL_MS = 1000
+MAX_REFRESH_INTERVAL_MS = 60 * 1000
+STEP_REFRESH_INTERVAL_MS = 100
 SERVER_MESSAGE_QUEUE = []
 SERVER_AGENTS = {}
 EPOCH = 0
+DEFAULT_IS_VERBOSE = False
+MARKER_MAX_SIZE = 20
+MARKER_MIN_SIZE = 5
+DEFAULT_MARKER_SIZE = 10
+MAX_SUSCEPTIBILITY = 100
+MIN_SUSCEPTIBILITY = 0
+MAX_SATURATION = 100
+MIN_SATURATION = 25
+MARKER_STYLE_COMMON = "circle"
+MARKER_STYLE_BOT = "square"
+MARKER_STYLE_UNKNOWN = "x"
+HUE_TEST_TOPIC = 150
+EDGE_COLOR_FAKENEWS = "rgb(255,0,0)"
+EDGE_COLOR_DEBUNK = "rgb(0,255,0)"
+
+
+def parse_cli_args():
+    usage_str = (
+        f"Usage: {sys.argv[0]} [-h] [-v (sets verbosity, default={DEFAULT_IS_VERBOSE})]"
+    )
+
+    try:
+        opts, _ = getopt.getopt(sys.argv[1:], "hv")
+    except getopt.GetoptError:
+        print(usage_str)
+        sys.exit(2)
+
+    is_verbose = DEFAULT_IS_VERBOSE
+
+    for opt, _ in opts:
+        if opt == "-h":
+            print(usage_str)
+            sys.exit(0)
+        elif opt == "-v":
+            is_verbose = not DEFAULT_IS_VERBOSE
+
+    return is_verbose
 
 
 def main():
+    IS_VERBOSE = parse_cli_args()
+
     server = flask.Flask(__name__)
 
     @server.route("/messages", methods=["POST"])
@@ -29,9 +72,11 @@ def main():
 
         for msg in msgs:
             SERVER_MESSAGE_QUEUE.append(msg)
-            print(
-                f"received msg. current queue: {len(SERVER_MESSAGE_QUEUE)} msgs, msg: {msg}"
-            )
+
+            if IS_VERBOSE:
+                print(
+                    f"received msg. current queue: {len(SERVER_MESSAGE_QUEUE)} msgs, msg: {msg}"
+                )
 
         return flask.Response("", 201)
 
@@ -46,9 +91,11 @@ def main():
             print(f"Couldn't add agent {agent_dict}, reason: {e}")
             return flask.Response("", 418)
 
-        print(
-            f"received agent. total: {len(SERVER_AGENTS)} agents, agent: {agent_dict}"
-        )
+        if IS_VERBOSE:
+            print(
+                f"received agent. total: {len(SERVER_AGENTS)} agents, agent: {agent_dict}"
+            )
+
         return flask.Response("", 201)
 
     external_stylesheets = ["https://codepen.io/chriddyp/pen/bWLwgP.css"]
@@ -67,9 +114,9 @@ def main():
                 html.Div(children="Change the refresh interval:"),
                 dcc.Slider(
                     id="refresh-interval-slider",
-                    min=1000,
-                    max=60 * 1000,
-                    step=100,
+                    min=MIN_REFRESH_INTERVAL_MS,
+                    max=MAX_REFRESH_INTERVAL_MS,
+                    step=STEP_REFRESH_INTERVAL_MS,
                     value=REFRESH_INTERVAL_MS,
                 ),
                 html.Div(id="state-text"),
@@ -179,15 +226,20 @@ def main():
             "fakenews": {
                 "edge_x": [],
                 "edge_y": [],
-                "style": dict(width=0.5, color="rgb(255,0,0)"),
+                "style": dict(width=0.5, color=EDGE_COLOR_FAKENEWS),
             },
             "debunk": {
                 "edge_x": [],
                 "edge_y": [],
-                "style": dict(width=0.5, color="rgb(0,255,0)"),
+                "style": dict(width=0.5, color=EDGE_COLOR_DEBUNK),
             },
         }
-        for msg_data in SERVER_MESSAGE_QUEUE:
+
+        # prevents race conditions
+        message_queue_copy = list(SERVER_MESSAGE_QUEUE)
+        SERVER_MESSAGE_QUEUE = []
+
+        for msg_data in message_queue_copy:
             try:
                 x0, y0 = SERVER_AGENTS[msg_data["from_jid"]]["location"]
                 x1, y1 = SERVER_AGENTS[msg_data["to_jid"]]["location"]
@@ -201,8 +253,6 @@ def main():
 
             except KeyError as e:
                 print(f"Data on server is incomplete for {msg_data}, reason: {e}")
-
-        SERVER_MESSAGE_QUEUE = []
 
         for edge_type_dict in edges.values():
             edge_trace = go.Scatter(
@@ -234,24 +284,18 @@ def main():
                 print(f"Data on server is incomplete for {agent_data}, reason: {e}")
 
         if max_neighbours != min_neighbours:
-            marker_max_size = 20
-            marker_min_size = 5
-            a_marker_coeff = (marker_max_size - marker_min_size) / (
+            a_marker_coeff = (MARKER_MAX_SIZE - MARKER_MIN_SIZE) / (
                 max_neighbours - min_neighbours
             )
-            b_marker_coeff = marker_max_size - max_neighbours * a_marker_coeff
+            b_marker_coeff = MARKER_MAX_SIZE - max_neighbours * a_marker_coeff
             get_marker_size = lambda n_count: n_count * a_marker_coeff + b_marker_coeff
         else:
-            get_marker_size = lambda n_count: 10
+            get_marker_size = lambda n_count: DEFAULT_MARKER_SIZE
 
-        max_susceptibility = 100
-        min_susceptibility = 0
-        max_saturation = 100
-        min_saturation = 25
-        a_sus_coeff = (max_saturation - min_saturation) / (
-            max_susceptibility - min_susceptibility
+        a_sus_coeff = (MAX_SATURATION - MIN_SATURATION) / (
+            MAX_SUSCEPTIBILITY - MIN_SUSCEPTIBILITY
         )
-        b_sus_coeff = max_saturation - max_susceptibility * a_sus_coeff
+        b_sus_coeff = MAX_SATURATION - MAX_SUSCEPTIBILITY * a_sus_coeff
         get_saturation = lambda sus: sus * a_sus_coeff + b_sus_coeff
 
         for agent_data in agents_data_copy:
@@ -260,17 +304,17 @@ def main():
 
                 agent_type = agent_data["type"]
                 if agent_type == "common":
-                    marker_symbol = "circle"
+                    marker_symbol = MARKER_STYLE_COMMON
                 elif agent_type == "bot":
-                    marker_symbol = "square"
+                    marker_symbol = MARKER_STYLE_BOT
                 else:
-                    marker_symbol = "x"
+                    marker_symbol = MARKER_STYLE_UNKNOWN
 
                 # TODO add more colors (hue values) for different topics
                 susceptible_topic = agent_data["susceptible_topic"]
                 susceptibility = agent_data["susceptibility"]
                 if susceptible_topic == "test":
-                    hue = 150
+                    hue = HUE_TEST_TOPIC
 
                 color = f"hsv({hue},{get_saturation(susceptibility)}%,100%)"
 
