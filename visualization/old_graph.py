@@ -4,17 +4,19 @@ it may be used as a tool to visualize connections inside the network
 how to run:
 in the main loop add the following code (after starting the agents,
 instead of the loop with 'time.sleep' as it starts the blocking GUI loop):
+
     fig = plt.figure()
     # matplotlib requires to use this '_' variable. don't ask why. it's python.
     _ = animation.FuncAnimation(
         fig,
-        visualize_network,
+        visualize_connections,
         fargs=(graph_creator.agents,),
         interval=math.sqrt(agents_count) * 1000,
     )
 
     # agents will start appearing while the GUI loop is running
     plt.show()
+
 """
 
 import networkx as nx
@@ -25,7 +27,7 @@ def get_id(jid):
     return str(jid).split("/")[1]
 
 
-def visualize_network(epoch, agents):
+def visualize_connections(epoch, agents):
     print(f"Epoch: {epoch}")
     plt.clf()
 
