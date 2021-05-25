@@ -25,6 +25,7 @@ instead of the loop with 'time.sleep' as it starts the blocking GUI loop):
 
 import networkx as nx
 import matplotlib.pyplot as plt
+from .server import AGENT_TYPE_STYLE
 
 
 def get_id(jid):
@@ -53,21 +54,25 @@ def visualize_connections(epoch, agents):
 
     graph.add_edges_from(edges)
 
-    # TODO use agent type
-    # type_to_color_map = {"bot": 1.0, "common": 0.5, "influencer": 0.0}
-    # node_colors = [type_to_color_map.get(node, 0.25) for node in G.nodes()]
+    # use 'AGENT_TYPE_STYLE' as it stores (as its keys)
+    # all the agent types supported in visualization
+    num_types = len(AGENT_TYPE_STYLE)
+    type_to_color_map = {}
+    for i, agent_type in enumerate(AGENT_TYPE_STYLE):
+        type_to_color_map[agent_type] = i / num_types
+
+    node_colors = [type_to_color_map.get(agent.type, 1.0) for agent in agents]
 
     pos_dict = nx.get_node_attributes(graph, "pos")
     positions = {}
     for node, position in zip(pos_dict.keys(), pos_dict.values()):
         positions[node] = position
 
-    # TODO use node_colors as node_color
     nx.draw_networkx_nodes(
         graph,
         positions,
         cmap=plt.get_cmap("jet"),
-        node_color="r",
+        node_color=node_colors,
         node_size=500,
         alpha=0.5,
     )
