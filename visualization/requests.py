@@ -27,8 +27,7 @@ def post_messages(msgs):
     }
 
     supported message types:
-        "fakenews"
-        "debunk"
+        check visualization/server.py
     """
 
     msg_dicts = []
@@ -50,19 +49,20 @@ def post_agent(agent):
     non-blocking
 
     agent must have following properties:
-        location: tuple (x, y)
+        location: tuple, i.e. (x, y)
         neighbours_count: number
-        susceptibility: number [0; 100]
+        susceptibility: number
         susceptible_topic: string
         type: string
 
+    supported susceptibility range:
+        check visualization/server.py
+
     supported agent types:
-        "bot"
-        "common"
-    unknown type will be displayed as 'X'
+        check visualization/server.py
 
     supported susceptible topics:
-        "test"
+        check visualization/server.py
     """
 
     agent_data = {

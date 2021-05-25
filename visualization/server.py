@@ -13,29 +13,39 @@ import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 
 
+# server
 HOST = "127.0.0.1"
 PORT = 8050
+SERVER_MESSAGE_QUEUE = []
+SERVER_AGENTS = {}
+DEFAULT_IS_VERBOSE = False
+
+# gui
 REFRESH_INTERVAL_MS = 10000
 MIN_REFRESH_INTERVAL_MS = 1000
 MAX_REFRESH_INTERVAL_MS = 60 * 1000
 STEP_REFRESH_INTERVAL_MS = 100
-SERVER_MESSAGE_QUEUE = []
-SERVER_AGENTS = {}
 EPOCH = 0
-DEFAULT_IS_VERBOSE = False
+
+# neighbours
 MARKER_MAX_SIZE = 20
 MARKER_MIN_SIZE = 5
 DEFAULT_MARKER_SIZE = 10
+
+# topics
 MAX_SUSCEPTIBILITY = 100
 MIN_SUSCEPTIBILITY = 0
 MAX_SATURATION = 100
 MIN_SATURATION = 25
-MARKER_STYLE_COMMON = "circle"
-MARKER_STYLE_BOT = "square"
-MARKER_STYLE_UNKNOWN = "x"
-HUE_TEST_TOPIC = 150
-EDGE_COLOR_FAKENEWS = "rgb(255,0,0)"
-EDGE_COLOR_DEBUNK = "rgb(0,255,0)"
+TOPIC_HUE = {"test": 150}
+UNKNOWN_TOPIC_HUE = 0
+
+# agent types
+AGENT_TYPE_STYLE = {"common": "circle", "bot": "square"}
+UKNOWN_AGENT_TYPE_STYLE = "x"
+
+# message types
+MESSAGE_TYPE_STYLE = {"fakenews": "rgb(255,0,0)", "debunk": "rgb(0,255,0)"}
 
 
 def parse_cli_args():
@@ -222,18 +232,13 @@ def main():
             ),
         )
 
-        edges = {
-            "fakenews": {
+        edges = {}
+        for msg_type, color in MESSAGE_TYPE_STYLE.items():
+            edges[msg_type] = {
                 "edge_x": [],
                 "edge_y": [],
-                "style": dict(width=0.5, color=EDGE_COLOR_FAKENEWS),
-            },
-            "debunk": {
-                "edge_x": [],
-                "edge_y": [],
-                "style": dict(width=0.5, color=EDGE_COLOR_DEBUNK),
-            },
-        }
+                "style": dict(width=0.5, color=color),
+            }
 
         # prevents race conditions
         message_queue_copy = list(SERVER_MESSAGE_QUEUE)
@@ -303,19 +308,13 @@ def main():
                 x, y = agent_data["location"]
 
                 agent_type = agent_data["type"]
-                if agent_type == "common":
-                    marker_symbol = MARKER_STYLE_COMMON
-                elif agent_type == "bot":
-                    marker_symbol = MARKER_STYLE_BOT
-                else:
-                    marker_symbol = MARKER_STYLE_UNKNOWN
+                marker_symbol = AGENT_TYPE_STYLE.get(
+                    agent_type, UKNOWN_AGENT_TYPE_STYLE
+                )
 
-                # TODO add more colors (hue values) for different topics
                 susceptible_topic = agent_data["susceptible_topic"]
                 susceptibility = agent_data["susceptibility"]
-                if susceptible_topic == "test":
-                    hue = HUE_TEST_TOPIC
-
+                hue = TOPIC_HUE.get(susceptible_topic, UNKNOWN_TOPIC_HUE)
                 color = f"hsv({hue},{get_saturation(susceptibility)}%,100%)"
 
                 neighbours_count = agent_data["neighbours_count"]
@@ -335,7 +334,11 @@ def main():
                 print(f"Data on server is incomplete for {agent_data}, reason: {e}")
 
         elapsed_time = datetime.datetime.now() - start_time
-        print(f"done updating graph ({int(elapsed_time.total_seconds() * 1000)} ms).")
+        num_displayed_agents = len(agents_data_copy)
+        num_displayed_msgs = len(message_queue_copy)
+        print(
+            f"done updating graph: {num_displayed_agents} agents, {num_displayed_msgs} msgs ({int(elapsed_time.total_seconds() * 1000)} ms)."
+        )
 
         return fig
 
