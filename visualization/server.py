@@ -98,7 +98,7 @@ def main():
         try:
             SERVER_AGENTS[agent_jid] = agent_data
         except KeyError as e:
-            print(f"Couldn't add agent {agent_dict}, reason: {e}")
+            print(f"Couldn't add agent {agent_dict}, missing key: {e}")
             return flask.Response("", 418)
 
         if IS_VERBOSE:
@@ -257,7 +257,7 @@ def main():
                 edges[msg_type]["edge_y"].append(None)
 
             except KeyError as e:
-                print(f"Data on server is incomplete for {msg_data}, reason: {e}")
+                print(f"Data on server is incomplete for {msg_data}, missing key: {e}")
 
         for edge_type_dict in edges.values():
             edge_trace = go.Scatter(
@@ -286,7 +286,9 @@ def main():
                     max_neighbours = agent_data["neighbours_count"]
 
             except KeyError as e:
-                print(f"Data on server is incomplete for {agent_data}, reason: {e}")
+                print(
+                    f"Data on server is incomplete for {agent_data}, missing key: {e}"
+                )
 
         if max_neighbours != min_neighbours:
             a_marker_coeff = (MARKER_MAX_SIZE - MARKER_MIN_SIZE) / (
@@ -331,7 +333,9 @@ def main():
                 fig.add_trace(node_trace)
 
             except KeyError as e:
-                print(f"Data on server is incomplete for {agent_data}, reason: {e}")
+                print(
+                    f"Data on server is incomplete for {agent_data}, missing key: {e}"
+                )
 
         elapsed_time = datetime.datetime.now() - start_time
         num_displayed_agents = len(agents_data_copy)
