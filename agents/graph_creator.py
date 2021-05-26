@@ -61,6 +61,7 @@ class GraphCreator(Agent):
             is_bot = random.random() < 0.1
 
             if is_bot:
+                print("Creating a bot agent...")
                 self.agents.append(
                     Bot(
                         self.jid,
@@ -72,6 +73,7 @@ class GraphCreator(Agent):
                     )
                 )
             else:
+                print("Creating a common agent...")
                 self.agents.append(
                     Common(
                         self.jid,

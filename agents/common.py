@@ -1,7 +1,7 @@
 import random
 import datetime
 import asyncio
-from utils import Message as News
+from agents.utils import Message as News
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
@@ -14,17 +14,20 @@ CONV_C = 16  # convergance constant
 
 
 class Common(Agent):
-    def __init__(self, jid, pswd, loc, adj, topic=0, verify_security=False):
+    def __init__(
+        self, graph_creator_jid, jid, pswd, loc, adj, topic=0, verify_security=False
+    ):
         super().__init__(jid, pswd, verify_security)
         self.location = loc
         self.adj_list = adj
         self.beliving = []
         self.debunking = []
+        self.graph_creator_jid = graph_creator_jid
         self.disposition = INIT_DISPOSITION
         self.topic = topic
         self.period_debunk = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
         self.period_share = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
-        self.period = random.randing(1, MAX_INITIAL_DELAY_SEC)
+        self.period = random.randint(1, MAX_INITIAL_DELAY_SEC)
 
     def log(self, msg):
         full_date = datetime.datetime.now
