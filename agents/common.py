@@ -157,10 +157,6 @@ class Common(Agent):
                     f"couldn't spread debunk, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.fakenews_msgs}"
                 )
 
-    class SendSelfToVisualization(PeriodicBehaviour):
-        async def run(self):
-            post_agent(self.agent)
-
     class CreateFakeNews(PeriodicBehaviour):
         async def run(self):
             if self.agent.adj_list:
@@ -186,3 +182,7 @@ class Common(Agent):
                 self.agent.log(
                     f"couldn't create fake news, reason: neighbours: {self.agent.adj_list}"
                 )
+
+    class SendSelfToVisualization(PeriodicBehaviour):
+        async def run(self):
+            post_agent(self.agent)
