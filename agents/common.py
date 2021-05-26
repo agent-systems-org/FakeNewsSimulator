@@ -27,10 +27,11 @@ class Common(Agent):
         self.topic = topic
         self.period_debunk = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
         self.period_share = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
+        self.period_create = random.randint(20, MAX_SPREAD_INTERVAL_SEC)
         self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
 
     def log(self, msg):
-        full_date = datetime.datetime.now
+        full_date = datetime.datetime.now()
         time = datetime.datetime.strftime(full_date, "%H:%M:%S")
         print(f"[{time}] {str(self.jid)}: {msg}")
 
@@ -38,9 +39,14 @@ class Common(Agent):
         self.log(
             f"common, location: {self.location}, neighbours: {self.adj_list}, topic: {self.topic}"
         )
-        start_at = datetime.datetime.now() + datetime.timedelta(second=self.delay)
         self.accept_news_behaviour = self.AcceptNews()
         self.add_behaviour(self.accept_news_behaviour)
+        start_at = datetime.datetime.now() + datetime.timedelta(second=self.delay)
+        self.create_news_behaviour = self.CreateFakeNews(
+            period=self.period_create, start_at=start_at
+                )
+        self.add_behaviour(self.create_news_behaviour)
+        start_at = datetime.datetime.now() + datetime.timedelta(second=self.delay)
         self.share_news_behaviour = self.ShareNews(
             period=self.period_share, start_at=start_at
         )
@@ -49,6 +55,7 @@ class Common(Agent):
         self.debunk_behaviour = self.ShareDebunk(
             period=self.period_debunk, start_at=start_at
         )
+        self.add_behaviour(self.debunk_behaviour)
 
     class AcceptNews(CyclicBehaviour):
         async def run(self):
@@ -130,3 +137,28 @@ class Common(Agent):
                 self.agent.log(
                     f"couldn't spread debunk, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.fakenews_msgs}"
                 )
+
+    class CreateFakeNews(PeriodicBehaviour):
+        async def run(self):
+            if self.agent.adj_list:
+                num_rand_recipients = random.randint(1, len(self.agent.adj_list))
+                rand_recipients = random.sample(
+                    self.agent.adj_list, k=num_rand_recipients
+                )
+                new_fake_news = News(self.agent.jid)
+                new_fake_news.new(self.topic)
+                self.beliving.append(new_fake_news)
+                self.agent.log(f"Generating new fake news and spreading to {num_rand_recipients} recipients")
+                msgs = []
+                for recipient in rand_recipients:
+                    msg = Message()
+                    msg.to = recipient
+                    msg.body = new_fake_news.toJSON()
+                    msgs.append(msg)
+
+                await asyncio.wait([self.send(msg) for msg in msgs])
+            else:
+                self.agent.log(
+                    f"couldn't create fake news, reason: neighbours: {self.agent.adj_list}"
+                )
+
