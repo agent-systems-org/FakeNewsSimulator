@@ -5,7 +5,7 @@ from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
 from visualization import post_agent, post_messages
-from agents.utils import Message as News
+from agents.utils import Message as News, NUM_TOPICS
 
 
 MAX_INITIAL_DELAY_SEC = 20
@@ -24,7 +24,7 @@ class Bot(Agent):
         self.fakenews_msgs = []
         self.type = "bot"
         self.susceptibility = 100
-        self.susceptible_topic = 1
+        self.susceptible_topic = random.randint(0, NUM_TOPICS - 1)
 
     def log(self, msg):
         full_date = datetime.datetime.now()
@@ -35,7 +35,7 @@ class Bot(Agent):
         for fakenews in self.fakenews_msgs:
             if fakenews.id == msg.id:
                 return True
-        
+
         return False
 
     async def setup(self):
@@ -67,7 +67,7 @@ class Bot(Agent):
                 rand_fakenews_msg = random.choice(self.agent.fakenews_msgs)
 
                 self.agent.log(
-                    f"spreading {rand_fakenews_msg} to ({num_rand_recipients}) {rand_recipients}"
+                    f"spreading {rand_fakenews_msg.id} to {num_rand_recipients} agents"
                 )
 
                 msgs = []
@@ -90,12 +90,13 @@ class Bot(Agent):
 
             else:
                 self.agent.log(
-                    f"couldn't spread fakenews, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.fakenews_msgs}"
+                    f"couldn't spread fakenews, reason: neighbours: {self.agent.adj_list}, fakenews: {len(self.agent.fakenews_msgs)}"
                 )
 
     class ReceiveFakenewsBehaviour(CyclicBehaviour):
         async def run(self):
-            msg_json = await self.receive(MAX_RECEIVE_TIME_SEC)
+            rcv_msg = await self.receive(MAX_RECEIVE_TIME_SEC)
+            msg_json = rcv_msg.body
 
             if not msg_json:
                 self.agent.log("timeout or received message is empty")
@@ -105,10 +106,9 @@ class Bot(Agent):
 
                 if not msg.debunking and not self.agent.has_message(msg):
                     self.agent.fakenews_msgs.append(msg)
-
-                self.agent.log(
-                    f"new message received: {msg}, fakenews messages: {len(self.agent.fakenews_msgs)}"
-                )
+                    self.agent.log(
+                        f"new fakenews received, fakenews messages: {len(self.agent.fakenews_msgs)}"
+                    )
 
     class SendSelfToVisualization(PeriodicBehaviour):
         async def run(self):
