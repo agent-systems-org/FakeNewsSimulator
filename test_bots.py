@@ -82,7 +82,8 @@ if __name__ == "__main__":
         neighbours_indices = nearest_indices[0][1:]
         neighbours = [bots_addresses[idx] for idx in neighbours_indices]
 
-        bot = Bot(bots_addresses[i], PASSWORD, location, neighbours)
+        topic = random.randint(0, NUM_TOPICS - 1)
+        bot = Bot(bots_addresses[i], PASSWORD, location, neighbours, topic)
 
         num_fakenews_msgs = random.randint(0, NUM_MSGS)
         fakenews_msgs = random.sample(msgs, num_fakenews_msgs)
