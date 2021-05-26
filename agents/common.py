@@ -1,10 +1,10 @@
 import random
 import datetime
 import asyncio
-from agents.utils import Message as News
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
+from agents.utils import Message as News
 from visualization import post_agent, post_messages
 
 INIT_SUSCEPTIBILITY = 50  # TBD
@@ -37,7 +37,7 @@ class Common(Agent):
     def log(self, msg):
         full_date = datetime.datetime.now()
         time = datetime.datetime.strftime(full_date, "%H:%M:%S")
-        print(f"[{time}] {str(self.jid)}: {msg}")
+        print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
 
     async def setup(self):
         self.log(
@@ -194,7 +194,7 @@ class Common(Agent):
                 new_fake_news.new(self.agent.susceptible_topic)
                 self.agent.believing.append(new_fake_news)
                 self.agent.log(
-                    f"Generating new fake news and spreading to {num_rand_recipients} recipients"
+                    f"generating new fake news and spreading to {num_rand_recipients} recipients"
                 )
 
                 msgs = []

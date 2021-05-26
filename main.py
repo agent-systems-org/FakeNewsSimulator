@@ -4,10 +4,10 @@ import sys
 import getopt
 import math
 from spade import quit_spade
-from agents import GraphCreator
 import matplotlib.pyplot as plt
 from matplotlib import animation
 from visualization import visualize_connections
+from agents import GraphCreator
 
 
 FIRST_JID = "test_agent@jabbim.pl/10000"
@@ -73,6 +73,11 @@ def main():
                 time.sleep(10)
             except KeyboardInterrupt:
                 break
+
+    for agent in agents:
+        agent.stop()
+
+    quit_spade()
 
 
 if __name__ == "__main__":

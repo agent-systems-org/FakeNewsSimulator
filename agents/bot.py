@@ -5,7 +5,7 @@ from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
 from visualization import post_agent, post_messages
-from agents.utils import Message as News, NUM_TOPICS
+from agents.utils import Message as News
 
 
 MAX_INITIAL_DELAY_SEC = 20
@@ -39,7 +39,7 @@ class Bot(Agent):
     def log(self, msg):
         full_date = datetime.datetime.now()
         time = datetime.datetime.strftime(full_date, "%H:%M:%S")
-        print(f"[{time}] {str(self.jid)}: {msg}")
+        print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
 
     def has_message(self, msg):
         for fakenews in self.fakenews_msgs:
@@ -76,9 +76,7 @@ class Bot(Agent):
                 )
                 rand_fakenews_msg = random.choice(self.agent.fakenews_msgs)
 
-                self.agent.log(
-                    f"spreading {rand_fakenews_msg.id} to {num_rand_recipients} agents"
-                )
+                self.agent.log(f"spreading fakenews to {num_rand_recipients} agents")
 
                 msgs = []
                 msgs_to_visualize = []
