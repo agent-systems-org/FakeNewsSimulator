@@ -116,7 +116,7 @@ class Common(Agent):
                 to_debunk = random.choice(self.agent.debunking)
 
                 debunk_msg = News(self.agent.jid)
-                debunk_msg = debunk_msg.new_debunk(to_debunk.id, to_debunk.topic)
+                debunk_msg.new_debunk(to_debunk.id, to_debunk.topic)
                 self.agent.log(f"spreading debunk to {num_rand_recipients} recipients")
                 msgs = []
                 for recipient in rand_recipients:
