@@ -1,7 +1,7 @@
 import random
 import datetime
 import asyncio
-from utils import Message as News
+from agents.utils import Message as News
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
