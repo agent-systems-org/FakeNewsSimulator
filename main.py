@@ -34,11 +34,6 @@ def main():
         except KeyboardInterrupt:
             break
 
-    for agent in agents + [graph_creator]:
-        agent.stop()
-
-    quit_spade()
-
 
 if __name__ == "__main__":
     main()
