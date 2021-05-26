@@ -27,7 +27,7 @@ class Common(Agent):
         self.topic = topic
         self.period_debunk = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
         self.period_share = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
-        self.period = random.randint(1, MAX_INITIAL_DELAY_SEC)
+        self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
 
     def log(self, msg):
         full_date = datetime.datetime.now
@@ -71,7 +71,7 @@ class Common(Agent):
                 ):
                     # its math time
                     M = content.calculate_power()
-                    E = 1 / (1 + 10 ** ((M - self.disposition) / 50))
+                    E = 1 / (1 + 10 ** ((M - self.agent.disposition) / 50))
                     result = random.uniform(0, 100)
                     if result > 50 - (M - self.agent.disposition):  # accept the msg
                         self.agent.disposition = self.agent.disposition + CONV_C * (

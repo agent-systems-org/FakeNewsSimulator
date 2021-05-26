@@ -22,6 +22,7 @@ class Bot(Agent):
         password,
         location,
         adj_list,
+        topic,
         verify_security=False,
     ):
         super().__init__(jid, password, verify_security)
@@ -33,7 +34,7 @@ class Bot(Agent):
         self.fakenews_msgs = []
         self.type = "bot"
         self.susceptibility = 100
-        self.susceptible_topic = random.randint(0, NUM_TOPICS - 1)
+        self.susceptible_topic = topic
 
     def log(self, msg):
         full_date = datetime.datetime.now()
