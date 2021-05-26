@@ -100,7 +100,7 @@ class Bot(Agent):
 
             else:
                 self.agent.log(
-                    f"couldn't spread fakenews, reason: neighbours: {self.agent.adj_list}, fakenews: {len(self.agent.fakenews_msgs)}"
+                    f"couldn't spread fakenews, reason: neighbours: {len(self.agent.adj_list)}, fakenews: {len(self.agent.fakenews_msgs)}"
                 )
 
     class ReceiveFakenewsBehaviour(CyclicBehaviour):
