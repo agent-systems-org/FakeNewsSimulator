@@ -23,7 +23,7 @@ class DummyAgent(Agent):
         self.graph_creator_jid = graph_creator_jid
         self.type = "dummy"
         self.susceptibility = random.randint(0, 100)
-        self.susceptible_topic = "test"
+        self.susceptible_topic = 1
 
     def log(self, msg):
         full_date = datetime.datetime.now()

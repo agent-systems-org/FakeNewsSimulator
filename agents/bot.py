@@ -22,7 +22,7 @@ class Bot(Agent):
         self.fakenews_msgs = []
         self.type = "bot"
         self.susceptibility = 100
-        self.susceptible_topic = "test"
+        self.susceptible_topic = 1
 
     def log(self, msg):
         full_date = datetime.datetime.now()

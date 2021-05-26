@@ -52,7 +52,7 @@ def post_agent(agent):
         location: tuple, i.e. (x, y)
         neighbours_count: number
         susceptibility: number
-        susceptible_topic: string
+        susceptible_topic: int
         type: string
 
     supported susceptibility range:
