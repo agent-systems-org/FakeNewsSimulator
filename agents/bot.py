@@ -15,7 +15,15 @@ SEND_SELF_PERIOD_SEC = 10
 
 
 class Bot(Agent):
-    def __init__(self, graph_creator_jid, jid, password, location, adj_list, verify_security=False):
+    def __init__(
+        self,
+        graph_creator_jid,
+        jid,
+        password,
+        location,
+        adj_list,
+        verify_security=False,
+    ):
         super().__init__(jid, password, verify_security)
         self.location = location
         self.adj_list = adj_list

@@ -14,7 +14,9 @@ CONV_C = 16  # convergance constant
 
 
 class Common(Agent):
-    def __init__(self, graph_creator_jid, jid, pswd, loc, adj, topic=0, verify_security=False):
+    def __init__(
+        self, graph_creator_jid, jid, pswd, loc, adj, topic=0, verify_security=False
+    ):
         super().__init__(jid, pswd, verify_security)
         self.location = loc
         self.adj_list = adj
@@ -114,7 +116,7 @@ class Common(Agent):
                 to_debunk = random.choice(self.agent.debunking)
 
                 debunk_msg = News(self.agent.jid)
-                debunk_msg = debunk_msg.new_debunk(to_debunk.id, to_debunk.topic)
+                debunk_msg.new_debunk(to_debunk.id, to_debunk.topic)
                 self.agent.log(f"spreading debunk to {num_rand_recipients} recipients")
                 msgs = []
                 for recipient in rand_recipients:
