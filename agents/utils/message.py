@@ -61,7 +61,7 @@ class Message:
             raise ValueError("Id of the message must be a positive integer!")
         self.debunk_id = debunk_id
 
-    def new_evolved(self):
+    def mutate(self):
         self.id = uuid.uuid1().int
         to_evolve = rand.randint(0, 5)
         if to_evolve == 0:

@@ -11,7 +11,7 @@ MAX_RECEIVE_TIME_SEC = 2137
 MAX_INITIAL_DELAY_SEC = 30
 MAX_SPREAD_INTERVAL_SEC = 120
 CONV_C = 16  # convergance constant
-
+MSG_MUTATE_PROBOBILITY = 0.1
 
 class Common(Agent):
     def __init__(
@@ -20,7 +20,7 @@ class Common(Agent):
         super().__init__(jid, pswd, verify_security)
         self.location = loc
         self.adj_list = adj
-        self.beliving = []
+        self.believing = []
         self.debunking = []
         self.graph_creator_jid = graph_creator_jid
         self.disposition = INIT_DISPOSITION
@@ -66,14 +66,7 @@ class Common(Agent):
             else:
                 # read msg
                 content = News.fromJSON(msg.body)
-                # check if msg was previously received
-                # if content.id in self.agent.beliving:
-                #     # TODO share msg + evolution (?)
-                #     self.agent.log(f"already received msg {content.id}")
-                # elif content.id in self.agent.debunking:
-                #     # TODO share debunk yee haw
-                #     self.agent.log(f"already received msg {content.id}")
-                if (content not in self.agent.beliving) and (
+                if (content not in self.agent.believing) and (
                     content not in self.agent.debunking
                 ):
                     # its math time
@@ -84,21 +77,25 @@ class Common(Agent):
                         self.agent.disposition = self.agent.disposition + CONV_C * (
                             1 - E
                         )
-                        self.agent.beliving.append(content)
+                        if content.debunking:
+                            self.agent.believing = [m for m in self.agent.beliving if m.id != content.debunk_id]
+                        self.agent.believing.append(content)
                     else:  # refute the msg
                         self.agent.disposition = self.agent.disposition + CONV_C * (-E)
                         self.agent.debunking.append(content)
 
     class ShareNews(PeriodicBehaviour):
         async def run(self):
-            if self.agent.adj_list and self.agent.beliving:
+            if self.agent.adj_list and self.agent.believing:
                 num_rand_recipients = random.randint(1, len(self.agent.adj_list))
                 rand_recipients = random.sample(
                     self.agent.adj_list, k=num_rand_recipients
                 )
-                rand_fakenews_msg = random.choice(self.agent.beliving)
+                rand_fakenews_msg = random.choice(self.agent.believing)
+                if random.random() > MSG_MUTATE_PROBOBILITY:
+                    rand_fakenews_msg.mutate()
                 self.agent.log(
-                    f"spreading fake news to {num_rand_recipients} recipients"
+                    f"spreading news to {num_rand_recipients} recipients"
                 )
                 msgs = []
                 for recipient in rand_recipients:
@@ -110,7 +107,7 @@ class Common(Agent):
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
-                    f"couldn't spread news, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.beliving}"
+                    f"couldn't spread news, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.believing}"
                 )
 
     class ShareDebunk(PeriodicBehaviour):
@@ -147,7 +144,7 @@ class Common(Agent):
                 )
                 new_fake_news = News(self.agent.jid)
                 new_fake_news.new(self.topic)
-                self.beliving.append(new_fake_news)
+                self.believing.append(new_fake_news)
                 self.agent.log(f"Generating new fake news and spreading to {num_rand_recipients} recipients")
                 msgs = []
                 for recipient in rand_recipients:
