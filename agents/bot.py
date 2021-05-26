@@ -5,6 +5,7 @@ from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
 from visualization import post_agent, post_messages
+from agents.utils import Message as News
 
 
 MAX_INITIAL_DELAY_SEC = 20
@@ -29,6 +30,13 @@ class Bot(Agent):
         full_date = datetime.datetime.now()
         time = datetime.datetime.strftime(full_date, "%H:%M:%S")
         print(f"[{time}] {str(self.jid)}: {msg}")
+
+    def has_message(self, msg):
+        for fakenews in self.fakenews_msgs:
+            if fakenews.id == msg.id:
+                return True
+        
+        return False
 
     async def setup(self):
         self.log(
@@ -67,7 +75,7 @@ class Bot(Agent):
                 for recipient in rand_recipients:
                     msg = Message()
                     msg.to = recipient
-                    msg.body = rand_fakenews_msg
+                    msg.body = rand_fakenews_msg.toJSON()
                     msgs.append(msg)
                     msgs_to_visualize.append(
                         {
@@ -87,18 +95,19 @@ class Bot(Agent):
 
     class ReceiveFakenewsBehaviour(CyclicBehaviour):
         async def run(self):
-            msg = await self.receive(MAX_RECEIVE_TIME_SEC)
+            msg_json = await self.receive(MAX_RECEIVE_TIME_SEC)
 
-            if not msg:
+            if not msg_json:
                 self.agent.log("timeout or received message is empty")
 
             else:
-                # TODO add checking if the recieved is fakenews
-                if msg.body not in self.agent.fakenews_msgs:
-                    self.agent.fakenews_msgs.append(msg.body)
+                msg = News.fromJSON(msg_json)
+
+                if not msg.debunking and not self.agent.has_message(msg):
+                    self.agent.fakenews_msgs.append(msg)
 
                 self.agent.log(
-                    f"new message received: {msg.body}, fakenews messages: {self.agent.fakenews_msgs}"
+                    f"new message received: {msg}, fakenews messages: {len(self.agent.fakenews_msgs)}"
                 )
 
     class SendSelfToVisualization(PeriodicBehaviour):
