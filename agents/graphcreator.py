@@ -1,6 +1,7 @@
 from spade.agent import Agent
 
 from agents import DummyAgent  # temporary
+from agents import Common, Bot
 from spade.behaviour import CyclicBehaviour, State
 from spade.message import Message
 from spade.template import Template
@@ -55,11 +56,30 @@ class GraphCreator(Agent):
         for i in range(0, self.vertices_no):
             jid = self.jids[i]
 
-            self.agents.append(
-                DummyAgent(
-                    self.jid, jid, self.password, self.locations[i], self.adj_list[i]
+            is_bot = random.random() > 0.1
+
+            if is_bot:
+                self.agents.append(
+                    Bot(
+                        self.jid,
+                        jid,
+                        self.password,
+                        self.locations[i],
+                        self.adj_list[i],
+                    )
                 )
-            )
+            else:
+                topic = random.randint(0, 4)
+                self.agents.append(
+                    Common(
+                        self.jid,
+                        jid,
+                        self.password,
+                        self.locations[i],
+                        self.adj_list[i],
+                        topic,
+                    )
+                )
 
     def generate_adj_list(self):
         adj_n = [self.randn() for i in range(0, self.vertices_no)]
