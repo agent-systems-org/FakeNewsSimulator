@@ -22,7 +22,7 @@ class Common(Agent):
         super().__init__(jid, pswd, verify_security)
         self.location = loc
         self.adj_list = adj
-        self.beliving = []
+        self.believing = []
         self.debunking = []
         self.graph_creator_jid = graph_creator_jid
         self.susceptibility = INIT_SUSCEPTIBILITY
@@ -52,7 +52,7 @@ class Common(Agent):
         )
         self.add_behaviour(self.share_news_behaviour)
 
-        start_at = datetime.datetime.now() + datetime.timedelta(second=self.delay)
+        start_at = datetime.datetime.now() + datetime.timedelta(seconds=self.delay)
         self.create_news_behaviour = self.CreateFakeNews(
             period=self.period_create, start_at=start_at
         )
@@ -79,13 +79,13 @@ class Common(Agent):
                 # read msg
                 content = News.fromJSON(msg.body)
                 # check if msg was previously received
-                # if content.id in self.agent.beliving:
+                # if content.id in self.agent.believing:
                 #     # TODO share msg + evolution (?)
                 #     self.agent.log(f"already received msg {content.id}")
                 # elif content.id in self.agent.debunking:
                 #     # TODO share debunk yee haw
                 #     self.agent.log(f"already received msg {content.id}")
-                if (content not in self.agent.beliving) and (
+                if (content not in self.agent.believing) and (
                     content not in self.agent.debunking
                 ):
                     # its math time
@@ -101,7 +101,7 @@ class Common(Agent):
                             self.agent.susceptibility
                             + CONVERGENCE * (1 - expected_score)
                         )
-                        self.agent.beliving.append(content)
+                        self.agent.believing.append(content)
                     else:  # refute the msg
                         self.agent.susceptibility = (
                             self.agent.susceptibility + CONVERGENCE * (-expected_score)
@@ -110,26 +110,37 @@ class Common(Agent):
 
     class ShareNews(PeriodicBehaviour):
         async def run(self):
-            if self.agent.adj_list and self.agent.beliving:
+            if self.agent.adj_list and self.agent.believing:
                 num_rand_recipients = random.randint(1, len(self.agent.adj_list))
                 rand_recipients = random.sample(
                     self.agent.adj_list, k=num_rand_recipients
                 )
-                rand_fakenews_msg = random.choice(self.agent.beliving)
+                rand_believing_msg = random.choice(self.agent.believing)
                 self.agent.log(
-                    f"spreading fake news to {num_rand_recipients} recipients"
+                    f"spreading believing news to {num_rand_recipients} recipients"
                 )
                 msgs = []
+                msgs_to_visualize = []
                 for recipient in rand_recipients:
                     msg = Message()
                     msg.to = recipient
-                    msg.body = rand_fakenews_msg.toJSON()
+                    msg.body = rand_believing_msg.toJSON()
                     msgs.append(msg)
+                    msgs_to_visualize.append(
+                        {
+                            "from_jid": self.agent.jid,
+                            "to_jid": recipient,
+                            "type": "debunk"
+                            if rand_believing_msg.debunking
+                            else "fakenews",
+                        }
+                    )
 
+                post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
-                    f"couldn't spread news, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.beliving}"
+                    f"couldn't spread news, reason: neighbours: {self.agent.adj_list}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
                 )
 
     class ShareDebunk(PeriodicBehaviour):
@@ -145,16 +156,25 @@ class Common(Agent):
                 debunk_msg.new_debunk(to_debunk.id, to_debunk.topic)
                 self.agent.log(f"spreading debunk to {num_rand_recipients} recipients")
                 msgs = []
+                msgs_to_visualize = []
                 for recipient in rand_recipients:
                     msg = Message()
                     msg.to = recipient
                     msg.body = debunk_msg.toJSON()
                     msgs.append(msg)
+                    msgs_to_visualize.append(
+                        {
+                            "from_jid": self.agent.jid,
+                            "to_jid": recipient,
+                            "type": "debunk",
+                        }
+                    )
 
+                post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
-                    f"couldn't spread debunk, reason: neighbours: {self.agent.adj_list}, fakenews: {self.agent.fakenews_msgs}"
+                    f"couldn't spread debunk, reason: neighbours: {self.agent.adj_list}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
                 )
 
     class CreateFakeNews(PeriodicBehaviour):
@@ -165,22 +185,31 @@ class Common(Agent):
                     self.agent.adj_list, k=num_rand_recipients
                 )
                 new_fake_news = News(self.agent.jid)
-                new_fake_news.new(self.agent.topic)
-                self.agent.beliving.append(new_fake_news)
+                new_fake_news.new(self.agent.susceptible_topic)
+                self.agent.believing.append(new_fake_news)
                 self.agent.log(
                     f"Generating new fake news and spreading to {num_rand_recipients} recipients"
                 )
                 msgs = []
+                msgs_to_visualize = []
                 for recipient in rand_recipients:
                     msg = Message()
                     msg.to = recipient
                     msg.body = new_fake_news.toJSON()
                     msgs.append(msg)
+                    msgs_to_visualize.append(
+                        {
+                            "from_jid": self.agent.jid,
+                            "to_jid": recipient,
+                            "type": "fakenews",
+                        }
+                    )
 
+                post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
-                    f"couldn't create fake news, reason: neighbours: {self.agent.adj_list}"
+                    f"couldn't create fake news, reason: neighbours: {self.agent.adj_list}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
                 )
 
     class SendSelfToVisualization(PeriodicBehaviour):
