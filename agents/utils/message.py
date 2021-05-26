@@ -4,6 +4,9 @@ import json
 from types import SimpleNamespace
 
 
+NUM_TOPICS = 5
+
+
 class Message:
     w = [1, 1, 1, 1, 1, 1]  # temporary solution
 
@@ -21,7 +24,7 @@ class Message:
 
         topic -- message's topic
         """
-        self.id = uuid.uuid1()  # each msg gets a unique incremented id
+        self.id = uuid.uuid4().int  # each msg gets a unique incremented id
         self.parent_id = self.id
         self.emotion = {
             "attitude": rand.uniform(-1.0, 1.0),

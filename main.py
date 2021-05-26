@@ -1,33 +1,37 @@
-from agents import GraphCreator
+import concurrent
 import time
+import sys
+from spade import quit_spade
+from agents import GraphCreator
+
+
+AGENTS_DEFAULT_COUNT = 8
 
 
 def main():
-    jid = "test_agent@jabbim.pl/21360"
+    if len(sys.argv) == 2:
+        agents_count = int(sys.argv[1])
+    else:
+        agents_count = AGENTS_DEFAULT_COUNT
 
-    g = GraphCreator(jid, "123", 30)
+    print(f"Creating network with {agents_count} agents")
 
-    future = g.start()
-    future.result()
+    first_jid = "test_agent@jabbim.pl/3000000"
+    password = "123"
 
-    agents = g.agents
+    graph_creator = GraphCreator(first_jid, password, agents_count)
+    graph_creator.start().result()
 
-    for agent in agents:
-        future = agent.start()
-        future.result()
+    agents = graph_creator.agents
 
-    all_alive = lambda: all(
-        map(lambda agent: agent.is_alive(), [agent for agent in agents])
-    )
+    # by default it uses at most 32 CPU cores
+    with concurrent.futures.ThreadPoolExecutor() as e:
+        e.submit([agent.start() for agent in agents])
 
-    while g.is_alive() and all_alive():
+    while True:
         try:
-            time.sleep(5)
+            time.sleep(10)
         except KeyboardInterrupt:
-            for agent in agents:
-                agent.stop()
-
-            g.stop()
             break
 
 

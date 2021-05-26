@@ -1,5 +1,4 @@
 from spade.agent import Agent
-
 from agents import DummyAgent  # temporary
 from agents import Common, Bot
 from spade.behaviour import CyclicBehaviour, State
@@ -56,9 +55,10 @@ class GraphCreator(Agent):
         for i in range(0, self.vertices_no):
             jid = self.jids[i]
 
-            is_bot = random.random() > 0.1
+            is_bot = random.random() < 0.1
 
             if is_bot:
+                print("Creating bot...")
                 self.agents.append(
                     Bot(
                         self.jid,
@@ -69,6 +69,7 @@ class GraphCreator(Agent):
                     )
                 )
             else:
+                print("Creating common...")
                 topic = random.randint(0, 4)
                 self.agents.append(
                     Common(
@@ -92,7 +93,7 @@ class GraphCreator(Agent):
 
     def generate_coordinates(self):
         self.locations = [
-            {np.random.randint(0, self.mapsize), np.random.randint(0, self.mapsize)}
+            (np.random.randint(0, self.mapsize), np.random.randint(0, self.mapsize))
             for i in range(0, self.vertices_no)
         ]
 
