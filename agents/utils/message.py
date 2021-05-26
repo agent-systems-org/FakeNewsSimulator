@@ -44,7 +44,6 @@ class Message:
         debunk_id -- id of the message we are debunking
         debunk_topic -- topic of the message we are debunking
         """
-
         self.id = uuid.uuid4().int  # each msg gets unique incremented id
         self.parent_id = self.id
         self.emotion = {
@@ -60,6 +59,22 @@ class Message:
         if debunk_id < 0:
             raise ValueError("Id of the message must be a positive integer!")
         self.debunk_id = debunk_id
+
+    def mutate(self):
+        self.id = uuid.uuid1().int
+        to_evolve = rand.randint(0, 5)
+        if to_evolve == 0:
+            self.emotion["attitude"] = rand.uniform(-1.0, 1.0)
+        elif to_evolve == 1:
+            self.emotion["arousal"] = rand.uniform(-1.0, 1.0)
+        elif to_evolve == 2:
+            self.persuation = rand.uniform(0, 1)
+        elif to_evolve == 3:
+            self.journalistic = rand.uniform(0, 1)
+        elif to_evolve == 4:
+            self.clickbait = rand.uniform(0, 1)
+        elif to_evolve == 5:
+            self.images = rand.uniform(0, 1)
 
     @staticmethod
     def fromJSON(msg_json):

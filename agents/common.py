@@ -13,6 +13,7 @@ MAX_INITIAL_DELAY_SEC = 30
 MAX_SPREAD_INTERVAL_SEC = 120
 CONVERGENCE = 16
 SEND_SELF_PERIOD_SEC = 10
+MSG_MUTATE_PROBOBILITY = 0.1
 
 
 class Common(Agent):
@@ -78,13 +79,7 @@ class Common(Agent):
             else:
                 # read msg
                 content = News.fromJSON(msg.body)
-                # check if msg was previously received
-                # if content.id in self.agent.believing:
-                #     # TODO share msg + evolution (?)
-                #     self.agent.log(f"already received msg {content.id}")
-                # elif content.id in self.agent.debunking:
-                #     # TODO share debunk yee haw
-                #     self.agent.log(f"already received msg {content.id}")
+
                 if (content not in self.agent.believing) and (
                     content not in self.agent.debunking
                 ):
@@ -101,6 +96,12 @@ class Common(Agent):
                             self.agent.susceptibility
                             + CONVERGENCE * (1 - expected_score)
                         )
+                        if content.debunking:
+                            self.agent.believing = [
+                                m
+                                for m in self.agent.believing
+                                if m.id != content.debunk_id
+                            ]
                         self.agent.believing.append(content)
                     else:  # refute the msg
                         self.agent.susceptibility = (
@@ -115,10 +116,15 @@ class Common(Agent):
                 rand_recipients = random.sample(
                     self.agent.adj_list, k=num_rand_recipients
                 )
+
                 rand_believing_msg = random.choice(self.agent.believing)
                 self.agent.log(
                     f"spreading believing news to {num_rand_recipients} recipients"
                 )
+
+                if random.random() > MSG_MUTATE_PROBOBILITY:
+                    rand_believing_msg.mutate()
+
                 msgs = []
                 msgs_to_visualize = []
                 for recipient in rand_recipients:
@@ -190,6 +196,7 @@ class Common(Agent):
                 self.agent.log(
                     f"Generating new fake news and spreading to {num_rand_recipients} recipients"
                 )
+
                 msgs = []
                 msgs_to_visualize = []
                 for recipient in rand_recipients:
