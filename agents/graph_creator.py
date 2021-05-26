@@ -1,11 +1,14 @@
+import random
+import json
+import numpy as np
+from sklearn.neighbors import KDTree
 from spade.agent import Agent
-from agents import Common, Bot
 from spade.behaviour import CyclicBehaviour, State
 from spade.message import Message
 from spade.template import Template
-import numpy as np
-import random
-import json
+from .common import Common
+from .bot import Bot
+from .utils.message import NUM_TOPICS
 
 
 class GraphCreator(Agent):
@@ -28,7 +31,8 @@ class GraphCreator(Agent):
             std = vertices_no / 2.0
 
         self.adj_list = {}
-        self.locations = {}
+        self.locations = []
+        self.location_tree = None
         self.jid_map = {}
         self.agents = []
         self.jids = []
@@ -53,7 +57,8 @@ class GraphCreator(Agent):
     def generate_agents(self):
         for i in range(0, self.vertices_no):
             jid = self.jids[i]
-            is_bot = random.random() > 0.1
+            topic = random.randint(0, NUM_TOPICS - 1)
+            is_bot = random.random() < 0.1
 
             if is_bot:
                 self.agents.append(
@@ -63,10 +68,10 @@ class GraphCreator(Agent):
                         self.password,
                         self.locations[i],
                         self.adj_list[i],
+                        topic,
                     )
                 )
             else:
-                topic = random.randint(0, 4)
                 self.agents.append(
                     Common(
                         self.jid,
@@ -79,25 +84,31 @@ class GraphCreator(Agent):
                 )
 
     def generate_adj_list(self):
-        adj_n = [self.randn() for i in range(0, self.vertices_no)]
-        for i in range(0, self.vertices_no):
-            possible_vertices = self.jids.copy()
-            possible_vertices.remove(self.jids[i])
+        for i in range(self.vertices_no):
+            num_neighbours = self.generate_num_of_neighbours()
+            node_location = self.locations[i]
 
-            random.shuffle(possible_vertices)
-            self.adj_list[i] = possible_vertices[: adj_n[i]]
+            # +1 becuase it also returns current location
+            _, nearest_indices = self.location_tree.query(
+                [node_location], k=num_neighbours + 1
+            )
+            neighbours_indices = nearest_indices[0][1:]
+            neighbours = [self.jids[idx] for idx in neighbours_indices]
+
+            self.adj_list[i] = neighbours
 
     def generate_coordinates(self):
-        self.locations = [
-            (np.random.randint(0, self.mapsize), np.random.randint(0, self.mapsize))
-            for i in range(0, self.vertices_no)
-        ]
+        dimensions = 2
+        coordinates = np.random.random((self.vertices_no, dimensions)) * self.mapsize
+        coordinates = list(map(tuple, coordinates))
+        coordinates = [(round(x), round(y)) for x, y in coordinates]
+        self.locations = coordinates
+        self.location_tree = KDTree(coordinates)
 
-    def randn(self):
+    def generate_num_of_neighbours(self):
         x = np.random.normal(self.avg, self.std)
         x = max(1, x)
         x = min(self.vertices_no - 1, x)
-
         return int(x)
 
     async def setup(self):
