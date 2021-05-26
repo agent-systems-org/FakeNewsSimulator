@@ -4,11 +4,12 @@ import asyncio
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
+from visualization import post_agent, post_messages
 
 
-MAX_INITIAL_DELAY_SEC = 30
-MAX_SPREAD_INTERVAL_SEC = 120
-MAX_RECEIVE_TIME_SEC = 2137
+MAX_INITIAL_DELAY_SEC = 20
+MAX_SPREAD_INTERVAL_SEC = 60
+MAX_RECEIVE_TIME_SEC = 1000
 
 
 class Bot(Agent):
@@ -19,6 +20,9 @@ class Bot(Agent):
         self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
         self.period = random.randint(1, MAX_SPREAD_INTERVAL_SEC)
         self.fakenews_msgs = []
+        self.type = "bot"
+        self.susceptibility = 100
+        self.susceptible_topic = 1
 
     def log(self, msg):
         full_date = datetime.datetime.now()
@@ -27,15 +31,22 @@ class Bot(Agent):
 
     async def setup(self):
         self.log(
-            f"bot, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {self.adj_list}, fakenews: {self.fakenews_msgs}"
+            f"bot, susceptibility: {self.susceptibility}, susceptible topic: {self.susceptible_topic}, delay: {self.delay}s, period: {self.period}s, location: {self.location}, neighbours: {len(self.adj_list)}, fakenews: {len(self.fakenews_msgs)}"
         )
+
         start_at = datetime.datetime.now() + datetime.timedelta(seconds=self.delay)
         self.spread_fakenews_behaviour = self.SpreadFakenewsBehaviour(
             period=self.period, start_at=start_at
         )
         self.add_behaviour(self.spread_fakenews_behaviour)
+
         self.receive_fakenews_behaviour = self.ReceiveFakenewsBehaviour()
         self.add_behaviour(self.receive_fakenews_behaviour)
+
+        send_self_to_visualization = self.SendSelfToVisualization(
+            period=10, start_at=datetime.datetime.now()
+        )
+        self.add_behaviour(send_self_to_visualization)
 
     class SpreadFakenewsBehaviour(PeriodicBehaviour):
         async def run(self):
@@ -51,12 +62,21 @@ class Bot(Agent):
                 )
 
                 msgs = []
+                msgs_to_visualize = []
                 for recipient in rand_recipients:
                     msg = Message()
                     msg.to = recipient
                     msg.body = rand_fakenews_msg
                     msgs.append(msg)
+                    msgs_to_visualize.append(
+                        {
+                            "from_jid": self.agent.jid,
+                            "to_jid": recipient,
+                            "type": "fakenews",
+                        }
+                    )
 
+                post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
 
             else:
@@ -79,3 +99,7 @@ class Bot(Agent):
                 self.agent.log(
                     f"new message received: {msg.body}, fakenews messages: {self.agent.fakenews_msgs}"
                 )
+
+    class SendSelfToVisualization(PeriodicBehaviour):
+        async def run(self):
+            post_agent(self.agent)
