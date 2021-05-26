@@ -8,6 +8,8 @@ from spade.message import Message
 
 INIT_DISPOSITION = 50  # TBD
 MAX_RECEIVE_TIME_SEC = 2137
+MAX_INITIAL_DELAY_SEC = 30
+MAX_SPREAD_INTERVAL_SEC = 120
 CONV_C = 16  # convergance constant
 
 
@@ -20,6 +22,9 @@ class Common(Agent):
         self.debunking = []
         self.disposition = INIT_DISPOSITION
         self.topic = topic
+        self.period_debunk = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
+        self.period_share = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
+        self.period = random.randing(1, MAX_INITIAL_DELAY_SEC)
 
     def log(self, msg):
         full_date = datetime.datetime.now
@@ -30,8 +35,17 @@ class Common(Agent):
         self.log(
             f"common, location: {self.location}, neighbours: {self.adj_list}, topic: {self.topic}"
         )
-
-    # TODO add behaviours
+        start_at = datetime.datetime.now() + datetime.timedelta(second=self.delay)
+        self.accept_news_behaviour = self.AcceptNews()
+        self.add_behaviour(self.accept_news_behaviour)
+        self.share_news_behaviour = self.ShareNews(
+            period=self.period_share, start_at=start_at
+        )
+        self.add_behaviour(self.share_news_behaviour)
+        start_at = datetime.datetime.now() + datetime.timedelta(second=self.delay)
+        self.debunk_behaviour = self.ShareDebunk(
+            period=self.period_debunk, start_at=start_at
+        )
 
     class AcceptNews(CyclicBehaviour):
         async def run(self):
@@ -65,7 +79,7 @@ class Common(Agent):
                         self.agent.disposition = self.agent.disposition + CONV_C * (-E)
                         self.agent.debunking.append(content)
 
-    class ShareFakeNews(PeriodicBehaviour):
+    class ShareNews(PeriodicBehaviour):
         async def run(self):
             if self.agent.adj_list and self.agent.beliving:
                 num_rand_recipients = random.randint(1, len(self.agent.adj_list))
