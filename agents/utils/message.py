@@ -45,7 +45,7 @@ class Message:
         debunk_topic -- topic of the message we are debunking
         """
 
-        self.id = uuid.uuid1()  # each msg gets unique incremented id
+        self.id = uuid.uuid4().int  # each msg gets unique incremented id
         self.parent_id = self.id
         self.emotion = {
             "attitude": rand.uniform(-1.0, 1.0),
