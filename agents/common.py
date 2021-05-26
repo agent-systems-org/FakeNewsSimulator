@@ -1,18 +1,18 @@
 import random
 import datetime
 import asyncio
-from agents.utils import Message as News
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
+from agents.utils import Message as News
 from visualization import post_agent, post_messages
 
 INIT_SUSCEPTIBILITY = 50  # TBD
 MAX_RECEIVE_TIME_SEC = 1000
 MAX_INITIAL_DELAY_SEC = 30
 MAX_SPREAD_INTERVAL_SEC = 120
-CONVERGENCE = 16
-SEND_SELF_PERIOD_SEC = 10
+CONVERGENCE = 8
+SEND_SELF_PERIOD_SEC = 5
 MSG_MUTATE_PROBOBILITY = 0.1
 
 
@@ -37,11 +37,11 @@ class Common(Agent):
     def log(self, msg):
         full_date = datetime.datetime.now()
         time = datetime.datetime.strftime(full_date, "%H:%M:%S")
-        print(f"[{time}] {str(self.jid)}: {msg}")
+        print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
 
     async def setup(self):
         self.log(
-            f"common, location: {self.location}, neighbours: {self.adj_list}, susceptible topic: {self.susceptible_topic}"
+            f"common, location: {self.location}, neighbours: {len(self.adj_list)}, susceptible topic: {self.susceptible_topic}"
         )
 
         self.accept_news_behaviour = self.AcceptNews()
@@ -146,7 +146,7 @@ class Common(Agent):
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
-                    f"couldn't spread news, reason: neighbours: {self.agent.adj_list}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
+                    f"couldn't spread news, reason: neighbours: {len(self.agent.adj_list)}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
                 )
 
     class ShareDebunk(PeriodicBehaviour):
@@ -180,7 +180,7 @@ class Common(Agent):
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
-                    f"couldn't spread debunk, reason: neighbours: {self.agent.adj_list}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
+                    f"couldn't spread debunk, reason: neighbours: {len(self.agent.adj_list)}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
                 )
 
     class CreateFakeNews(PeriodicBehaviour):
@@ -194,7 +194,7 @@ class Common(Agent):
                 new_fake_news.new(self.agent.susceptible_topic)
                 self.agent.believing.append(new_fake_news)
                 self.agent.log(
-                    f"Generating new fake news and spreading to {num_rand_recipients} recipients"
+                    f"generating new fake news and spreading to {num_rand_recipients} recipients"
                 )
 
                 msgs = []
@@ -216,7 +216,7 @@ class Common(Agent):
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
-                    f"couldn't create fake news, reason: neighbours: {self.agent.adj_list}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
+                    f"couldn't create fake news, reason: neighbours: {len(self.agent.adj_list)}, believing: {len(self.agent.believing)}, debunking: {len(self.agent.debunking)}"
                 )
 
     class SendSelfToVisualization(PeriodicBehaviour):

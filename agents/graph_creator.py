@@ -3,8 +3,7 @@ import json
 import numpy as np
 from sklearn.neighbors import KDTree
 from spade.agent import Agent
-from spade.behaviour import CyclicBehaviour, State
-from spade.message import Message
+from spade.behaviour import CyclicBehaviour
 from spade.template import Template
 from .common import Common
 from .bot import Bot
@@ -30,7 +29,7 @@ class GraphCreator(Agent):
         if std is None:
             std = vertices_no / 2.0
 
-        self.adj_list = {}
+        self.adj_dict = {}
         self.locations = []
         self.location_tree = None
         self.jid_map = {}
@@ -49,14 +48,13 @@ class GraphCreator(Agent):
         print("Graph creator initialized")
 
     def generate_jids(self):
-        for i in range(0, self.vertices_no):
+        for i in range(self.vertices_no):
             jid = f"test_agent@{self.domain}/{self.domain_number+i+1}"
             self.jids.append(jid)
             self.jid_map[jid] = i
 
     def generate_agents(self):
-        for i in range(0, self.vertices_no):
-            jid = self.jids[i]
+        for i in range(self.vertices_no):
             topic = random.randint(0, NUM_TOPICS - 1)
             is_bot = random.random() < 0.1
 
@@ -65,10 +63,10 @@ class GraphCreator(Agent):
                 self.agents.append(
                     Bot(
                         self.jid,
-                        jid,
+                        self.jids[i],
                         self.password,
                         self.locations[i],
-                        self.adj_list[i],
+                        self.adj_dict[i],
                         topic,
                     )
                 )
@@ -77,15 +75,15 @@ class GraphCreator(Agent):
                 self.agents.append(
                     Common(
                         self.jid,
-                        jid,
+                        self.jids[i],
                         self.password,
                         self.locations[i],
-                        self.adj_list[i],
+                        self.adj_dict[i],
                         topic,
                     )
                 )
 
-    def generate_adj_list(self):
+    def generate_adj_dict(self):
         for i in range(self.vertices_no):
             num_neighbours = self.generate_num_of_neighbours()
             node_location = self.locations[i]
@@ -97,7 +95,7 @@ class GraphCreator(Agent):
             neighbours_indices = nearest_indices[0][1:]
             neighbours = [self.jids[idx] for idx in neighbours_indices]
 
-            self.adj_list[i] = neighbours
+            self.adj_dict[i] = neighbours
 
     def generate_coordinates(self):
         dimensions = 2
@@ -116,19 +114,19 @@ class GraphCreator(Agent):
     async def setup(self):
         self.generate_coordinates()
         self.generate_jids()
-        self.generate_adj_list()
+        self.generate_adj_dict()
         print("Initializing agents")
         self.generate_agents()
 
         template = Template()
         template.set_metadata("performative", "query")
-        b = self.InformAboutNeighboursBehaviour(self.adj_list, self.jid_map)
+        b = self.InformAboutNeighboursBehaviour(self.adj_dict, self.jid_map)
         self.add_behaviour(b, template)
 
     class InformAboutNeighboursBehaviour(CyclicBehaviour):
-        def __init__(self, adj_list, jid_map):
+        def __init__(self, adj_dict, jid_map):
             super().__init__()
-            self.adj_list = adj_list
+            self.adj_dict = adj_dict
             self.jid_map = jid_map
             print(
                 "Graph creator is ready to inform other agents about their neighbours"
@@ -145,9 +143,9 @@ class GraphCreator(Agent):
 
                 sender_id = self.jid_map[sender_jid]
 
-                if sender_id not in self.adj_list:
+                if sender_id not in self.adj_dict:
                     return
 
                 reply = msg.make_reply()
-                reply.body = json.dumps({"neighbours": self.adj_list[sender_id]})
+                reply.body = json.dumps({"neighbours": self.adj_dict[sender_id]})
                 await self.send(reply)
