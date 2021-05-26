@@ -10,6 +10,7 @@ from visualization import post_agent, post_messages
 MAX_INITIAL_DELAY_SEC = 20
 MAX_SPREAD_INTERVAL_SEC = 60
 MAX_RECEIVE_TIME_SEC = 1000
+SEND_SELF_PERIOD_SEC = 10
 
 
 class Bot(Agent):
@@ -44,7 +45,7 @@ class Bot(Agent):
         self.add_behaviour(self.receive_fakenews_behaviour)
 
         send_self_to_visualization = self.SendSelfToVisualization(
-            period=10, start_at=datetime.datetime.now()
+            period=SEND_SELF_PERIOD_SEC, start_at=datetime.datetime.now()
         )
         self.add_behaviour(send_self_to_visualization)
 
