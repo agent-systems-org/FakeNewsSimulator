@@ -15,7 +15,7 @@ SEND_SELF_PERIOD_SEC = 10
 
 
 class Bot(Agent):
-    def __init__(self, jid, password, location, adj_list, verify_security=False):
+    def __init__(self, jid, password, location, adj_list, topic, verify_security=False):
         super().__init__(jid, password, verify_security)
         self.location = location
         self.adj_list = adj_list
@@ -24,7 +24,7 @@ class Bot(Agent):
         self.fakenews_msgs = []
         self.type = "bot"
         self.susceptibility = 100
-        self.susceptible_topic = random.randint(0, NUM_TOPICS - 1)
+        self.susceptible_topic = topic
 
     def log(self, msg):
         full_date = datetime.datetime.now()
