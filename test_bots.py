@@ -11,6 +11,7 @@ from sklearn.neighbors import KDTree
 from spade import quit_spade
 from agents import Bot
 from visualization import visualize_connections
+from agents.utils import Message as News, NUM_TOPICS
 
 
 ADDRESS = "test_agent@jabbim.pl/"
@@ -56,7 +57,9 @@ if __name__ == "__main__":
     NUM_BOTS, NUM_MSGS, IS_CONNECTIONS_VISUALIZATION_ON = parse_cli_args()
 
     bots_addresses = [f"{ADDRESS}{FIRST_ID + i}" for i in range(NUM_BOTS)]
-    msgs = [f"msg{i}" for i in range(NUM_MSGS)]
+    msgs = [News(random.choice(bots_addresses)) for _ in range(NUM_MSGS)]
+    for msg in msgs:
+        msg.new(random.randint(0, NUM_TOPICS - 1))
 
     # generate uniformly distributed coordinates
     X = np.random.random((NUM_BOTS, DIMENSIONS)) * MAX_COORD
@@ -79,7 +82,8 @@ if __name__ == "__main__":
         neighbours_indices = nearest_indices[0][1:]
         neighbours = [bots_addresses[idx] for idx in neighbours_indices]
 
-        bot = Bot(bots_addresses[i], PASSWORD, location, neighbours)
+        topic = random.randint(0, NUM_TOPICS - 1)
+        bot = Bot(bots_addresses[i], PASSWORD, location, neighbours, topic)
 
         num_fakenews_msgs = random.randint(0, NUM_MSGS)
         fakenews_msgs = random.sample(msgs, num_fakenews_msgs)
