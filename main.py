@@ -5,7 +5,7 @@ from spade import quit_spade
 from agents import GraphCreator
 
 
-AGENTS_DEFAULT_COUNT = 8
+AGENTS_DEFAULT_COUNT = 80
 
 
 def main():
@@ -16,10 +16,12 @@ def main():
 
     print(f"Creating network with {agents_count} agents")
 
-    first_jid = "test_agent@jabbim.pl/3000000"
-    password = "123"
+    # first_jid = "test_agent@jabbim.pl/1000"
+    base = "fake_news"
+    domain = "@jabbim.pl/1000"
+    password = "12345"
 
-    graph_creator = GraphCreator(first_jid, password, agents_count)
+    graph_creator = GraphCreator(base, domain, password, agents_count)
     graph_creator.start().result()
 
     agents = graph_creator.agents
