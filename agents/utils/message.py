@@ -17,7 +17,7 @@ class Message:
         Before using the message further methods need be called
         jid -- creator's jid
         """
-        self.creator_jid = jid
+        self.creator_jid = str(jid)
 
     def new(self, topic):
         """Generates new random message

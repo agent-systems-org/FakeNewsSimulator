@@ -10,7 +10,7 @@ from visualization import visualize_connections
 from agents import GraphCreator
 
 DEFAULT_NUM_AGENTS = 80
-DEFAULT_IS_CONNECTIONS_VISUALIZATION_ON = True
+DEFAULT_IS_CONNECTIONS_VISUALIZATION_ON = False
 
 
 def parse_cli_args():
