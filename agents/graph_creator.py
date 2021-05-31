@@ -1,6 +1,7 @@
 import random
 import json
 import numpy as np
+from spade.message import Message
 from sklearn.neighbors import KDTree
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
@@ -93,7 +94,7 @@ class GraphCreator(Agent):
                 [node_location], k=num_neighbours + 1
             )
             neighbours_indices = nearest_indices[0][1:]
-            neighbours = [self.jids[idx] for idx in neighbours_indices]
+            neighbours = {self.jids[idx] for idx in neighbours_indices}
 
             self.adj_dict[i] = neighbours
 
@@ -120,32 +121,31 @@ class GraphCreator(Agent):
 
         template = Template()
         template.set_metadata("performative", "query")
-        b = self.InformAboutNeighboursBehaviour(self.adj_dict, self.jid_map)
+        b = self.UpdateGraphBehaviour()
         self.add_behaviour(b, template)
 
-    class InformAboutNeighboursBehaviour(CyclicBehaviour):
-        def __init__(self, adj_dict, jid_map):
-            super().__init__()
-            self.adj_dict = adj_dict
-            self.jid_map = jid_map
-            print(
-                "Graph creator is ready to inform other agents about their neighbours"
-            )
-
+    class UpdateGraphBehaviour(CyclicBehaviour):
         async def run(self):
             msg = await self.receive(timeout=10)
 
             if msg:
                 sender_jid = str(msg.sender)
+                body_json = json.loads(msg.body)
+                user_to_follow_jid = str(body_json["follow"])
 
-                if sender_jid not in self.jid_map:
+                if (
+                    sender_jid not in self.agent.jid_map
+                    or user_to_follow_jid not in self.agent.jid_map
+                ):
                     return
 
-                sender_id = self.jid_map[sender_jid]
+                sender_id = self.agent.jid_map[sender_jid]
+                user_to_follow_id = self.agent.jid_map[user_to_follow_jid]
 
-                if sender_id not in self.adj_dict:
+                if (
+                    sender_id not in self.agent.adj_dict
+                    or user_to_follow_id not in self.agent.adj_dict
+                ):
                     return
 
-                reply = msg.make_reply()
-                reply.body = json.dumps({"neighbours": self.adj_dict[sender_id]})
-                await self.send(reply)
+                self.agent.adj_dict[user_to_follow_id].add(sender_jid)
