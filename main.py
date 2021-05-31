@@ -1,40 +1,85 @@
 import concurrent
 import time
 import sys
+import getopt
+import math
 from spade import quit_spade
+import matplotlib.pyplot as plt
+from matplotlib import animation
+from visualization import visualize_connections
 from agents import GraphCreator
 
+DEFAULT_NUM_AGENTS = 80
+DEFAULT_IS_CONNECTIONS_VISUALIZATION_ON = True
 
-AGENTS_DEFAULT_COUNT = 80
+
+def parse_cli_args():
+    usage_str = f"Usage: {sys.argv[0]} [-h] [-n <num_of_agents> (default={DEFAULT_NUM_AGENTS})] [-v (toggle visualization of connections, default={DEFAULT_IS_CONNECTIONS_VISUALIZATION_ON})]"
+
+    try:
+        opts, _ = getopt.getopt(sys.argv[1:], "hvn:")
+    except getopt.GetoptError:
+        print(usage_str)
+        sys.exit(2)
+
+    num_agents = DEFAULT_NUM_AGENTS
+    is_connections_visualization_on = DEFAULT_IS_CONNECTIONS_VISUALIZATION_ON
+
+    for opt, arg in opts:
+        if opt == "-h":
+            print(usage_str)
+            sys.exit(0)
+        elif opt == "-n":
+            num_agents = int(arg)
+        elif opt == "-v":
+            is_connections_visualization_on = (
+                not DEFAULT_IS_CONNECTIONS_VISUALIZATION_ON
+            )
+
+    return num_agents, is_connections_visualization_on
 
 
 def main():
-    if len(sys.argv) == 2:
-        agents_count = int(sys.argv[1])
-    else:
-        agents_count = AGENTS_DEFAULT_COUNT
+    num_agents, IS_CONNECTIONS_VISUALIZATION_ON = parse_cli_args()
 
-    print(f"Creating network with {agents_count} agents")
-
-    # first_jid = "test_agent@jabbim.pl/1000"
     base = "fake_news"
     domain = "@jabbim.pl/1000"
+    # domain = "@localhost/1000"
     password = "12345"
 
-    graph_creator = GraphCreator(base, domain, password, agents_count)
+    graph_creator = GraphCreator(base, domain, password, num_agents)
+    print(f"Creating network with {num_agents} agents")
+
     graph_creator.start().result()
 
     agents = graph_creator.agents
 
-    # by default it uses at most 32 CPU cores
     with concurrent.futures.ThreadPoolExecutor() as e:
         e.submit([agent.start() for agent in agents])
 
-    while True:
-        try:
-            time.sleep(10)
-        except KeyboardInterrupt:
-            break
+    if IS_CONNECTIONS_VISUALIZATION_ON:
+        fig = plt.figure()
+
+        _ = animation.FuncAnimation(
+            fig,
+            visualize_connections,
+            fargs=(agents,),
+            interval=math.sqrt(len(agents)) * 1000,
+        )
+
+        plt.show()
+
+    else:
+        while True:
+            try:
+                time.sleep(10)
+            except KeyboardInterrupt:
+                break
+
+    for agent in agents:
+        agent.stop()
+
+    quit_spade()
 
 
 if __name__ == "__main__":

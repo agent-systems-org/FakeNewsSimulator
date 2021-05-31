@@ -46,6 +46,10 @@ UKNOWN_AGENT_TYPE_STYLE = "x"
 
 # message types
 MESSAGE_TYPE_STYLE = {"fakenews": "rgb(255,0,0)", "debunk": "rgb(0,255,0)"}
+MESSAGE_TYPE_SHIFT = {
+    "fakenews": {"x": 0.05, "y": 0.05},
+    "debunk": {"x": -0.05, "y": -0.05},
+}
 
 
 def parse_cli_args():
@@ -249,11 +253,13 @@ def main():
                 x0, y0 = SERVER_AGENTS[msg_data["from_jid"]]["location"]
                 x1, y1 = SERVER_AGENTS[msg_data["to_jid"]]["location"]
                 msg_type = msg_data["type"]
-                edges[msg_type]["edge_x"].append(x0)
-                edges[msg_type]["edge_x"].append(x1)
+                x_shift = MESSAGE_TYPE_SHIFT[msg_type]["x"]
+                y_shift = MESSAGE_TYPE_SHIFT[msg_type]["y"]
+                edges[msg_type]["edge_x"].append(x0 + x_shift)
+                edges[msg_type]["edge_x"].append(x1 + x_shift)
                 edges[msg_type]["edge_x"].append(None)
-                edges[msg_type]["edge_y"].append(y0)
-                edges[msg_type]["edge_y"].append(y1)
+                edges[msg_type]["edge_y"].append(y0 - y_shift)
+                edges[msg_type]["edge_y"].append(y1 - y_shift)
                 edges[msg_type]["edge_y"].append(None)
 
             except KeyError as e:
