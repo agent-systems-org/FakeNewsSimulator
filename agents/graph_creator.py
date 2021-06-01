@@ -58,8 +58,8 @@ class GraphCreator(Agent):
             print(jid)
             self.jids.append(jid)
             self.jid_map[jid] = j
-            j = j+1
-            if(j == 10):
+            j = j + 1
+            if j == 10:
                 self.base_number += 1
                 j = 0
 
