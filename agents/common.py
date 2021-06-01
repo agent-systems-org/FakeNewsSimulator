@@ -1,5 +1,7 @@
+import agents
 import random
 import datetime
+import json
 import asyncio
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
@@ -14,6 +16,7 @@ MAX_SPREAD_INTERVAL_SEC = 120
 CONVERGENCE = 8
 SEND_SELF_PERIOD_SEC = 5
 MSG_MUTATE_PROBOBILITY = 0.1
+FOLLOW_NEWS_CREATOR_PROBABILITY = 1
 
 
 class Common(Agent):
@@ -74,6 +77,8 @@ class Common(Agent):
         async def run(self):
             msg = await self.receive(MAX_RECEIVE_TIME_SEC)
 
+            self.agent.log(f"number of neighbours: {len(self.agent.adj_list)}")
+
             if not msg:
                 self.agent.log("timeout or received msg is empty")
             else:
@@ -96,6 +101,15 @@ class Common(Agent):
                             self.agent.susceptibility
                             + CONVERGENCE * (1 - expected_score)
                         )
+                        if random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY:
+                            follow_request = Message()
+                            follow_request.to = str(self.agent.graph_creator_jid)
+                            follow_request.set_metadata("performative", "query")
+                            follow_request.body = json.dumps(
+                                {"follow": content.creator_jid}
+                            )
+                            await self.send(follow_request)
+
                         if content.debunking:
                             self.agent.believing = [
                                 m
