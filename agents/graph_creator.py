@@ -13,7 +13,8 @@ from .utils.message import NUM_TOPICS
 class GraphCreator(Agent):
     def __init__(
         self,
-        jid,
+        base,
+        domain,
         password,
         vertices_no,
         avg=None,
@@ -21,6 +22,7 @@ class GraphCreator(Agent):
         mapsize=100,
         verify_security=False,
     ):
+        jid = base + "0" + domain
         super().__init__(jid, password, verify_security)
 
         if avg is None:
@@ -39,19 +41,27 @@ class GraphCreator(Agent):
         self.std = std
         self.vertices_no = vertices_no
         self.mapsize = mapsize
-        self.domain_number = 0
-        self.domain = jid.split("@")[1]
-        [self.domain, self.domain_number] = self.domain.split("/")
+        # self.domain_number = 0
+        # self.domain = jid.split("@")[1]
+        [self.domain, self.domain_number] = domain.split("/")
+        self.base_number = 0
+        self.base = base
         self.domain_number = int(self.domain_number)
         self.password = password
 
         print("Graph creator initialized")
 
     def generate_jids(self):
+        j = 0
         for i in range(self.vertices_no):
-            jid = f"test_agent@{self.domain}/{self.domain_number+i+1}"
+            jid = f"{self.base}{self.base_number}{self.domain}/{self.domain_number+j+1}"
+            print(jid)
             self.jids.append(jid)
-            self.jid_map[jid] = i
+            self.jid_map[jid] = j
+            j = j + 1
+            if j == 10:
+                self.base_number += 1
+                j = 0
 
     def generate_agents(self):
         for i in range(self.vertices_no):

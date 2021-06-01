@@ -9,10 +9,7 @@ from matplotlib import animation
 from visualization import visualize_connections
 from agents import GraphCreator
 
-
-FIRST_JID = "test_agent@jabbim.pl/10000"
-PASSWORD = "123"
-DEFAULT_NUM_AGENTS = 16
+DEFAULT_NUM_AGENTS = 80
 DEFAULT_IS_CONNECTIONS_VISUALIZATION_ON = False
 
 
@@ -43,11 +40,16 @@ def parse_cli_args():
 
 
 def main():
-    NUM_AGENTS, IS_CONNECTIONS_VISUALIZATION_ON = parse_cli_args()
+    num_agents, IS_CONNECTIONS_VISUALIZATION_ON = parse_cli_args()
 
-    print(f"Creating network with {NUM_AGENTS} agents")
+    base = "fake_news"
+    domain = "@jabbim.pl/1000"
+    # domain = "@localhost/1000"
+    password = "12345"
 
-    graph_creator = GraphCreator(FIRST_JID, PASSWORD, NUM_AGENTS)
+    graph_creator = GraphCreator(base, domain, password, num_agents)
+    print(f"Creating network with {num_agents} agents")
+
     graph_creator.start().result()
 
     agents = graph_creator.agents
