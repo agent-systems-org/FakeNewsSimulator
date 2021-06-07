@@ -6,17 +6,18 @@ import threading
 import webbrowser
 import json
 import flask
+import pandas as pd
 import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import plotly.graph_objects as go
 from dash.dependencies import Input, Output
 
-
 # server
 HOST = "127.0.0.1"
 PORT = 8050
 SERVER_MESSAGE_QUEUE = []
+SERVER_MESSAGES = {}
 SERVER_AGENTS = {}
 DEFAULT_IS_VERBOSE = False
 
@@ -88,6 +89,14 @@ def main():
         for msg in msgs:
             SERVER_MESSAGE_QUEUE.append(msg)
 
+            full_msg = json.loads((msg["full_msg"]))
+            msg_parent_id = full_msg["parent_id"]
+            if msg_parent_id in SERVER_MESSAGES:
+                SERVER_MESSAGES[msg_parent_id]["counter"] += 1
+            else:
+                SERVER_MESSAGES[msg_parent_id] = full_msg
+                SERVER_MESSAGES[msg_parent_id]["counter"] = 1
+
             if IS_VERBOSE:
                 print(
                     f"received msg. current queue: {len(SERVER_MESSAGE_QUEUE)} msgs, msg: {msg}"
@@ -139,6 +148,7 @@ def main():
                 html.Button("resume", id="resume-button"),
                 html.Button("clean", id="clean-button"),
                 dcc.Graph(id="graph", style={"height": "100vh"}),
+                dcc.Graph(id="table", style={"height": "100vh"}),
                 dcc.Interval(
                     id="interval-component",
                     interval=REFRESH_INTERVAL_MS,
@@ -193,6 +203,7 @@ def main():
         global SERVER_MESSAGE_QUEUE
         global SERVER_AGENTS
         global EPOCH
+        global SERVER_MESSAGES
 
         context = dash.callback_context
 
@@ -200,16 +211,13 @@ def main():
             SERVER_MESSAGE_QUEUE = []
             SERVER_AGENTS = {}
             EPOCH = 1
+            SERVER_MESSAGES = {}
         else:
             EPOCH += 1
 
         return html.Span(f"Epoch: {EPOCH}")
 
-    @app.callback(
-        Output("graph", "figure"),
-        Input("interval-component", "n_intervals"),
-    )
-    def update_graph(n_intervals):
+    def update_graph():
         # it's cleared after reading all pending messages
         global SERVER_MESSAGE_QUEUE
 
@@ -353,6 +361,40 @@ def main():
 
         return fig
 
+    def update_table():
+        if len(SERVER_MESSAGES) > 0:
+            df = pd.DataFrame.from_dict(SERVER_MESSAGES, orient="index")
+            df["parent_id"] = df["parent_id"].apply(lambda i: str(i)[:6] + "...")
+            # print(df)
+            list(df.columns)
+            fig = go.Figure(
+                data=[
+                    go.Table(
+                        header=dict(
+                            values=["parent_id", "counter"],
+                            fill_color="paleturquoise",
+                            align="left",
+                        ),
+                        cells=dict(
+                            values=[df.parent_id, df.counter],
+                            fill_color="lavender",
+                            align="left",
+                        ),
+                    )
+                ]
+            )
+
+            return fig
+
+        return go.Figure()
+
+    @app.callback(
+        [Output("graph", "figure"), Output("table", "figure")],
+        Input("interval-component", "n_intervals"),
+    )
+    def update_figures(n_intervals):
+        return [update_graph(), update_table()]
+
     app.run_server(debug=True, host=HOST, port=PORT)
 
 
@@ -362,5 +404,4 @@ def open_new_tab():
 
 
 if __name__ == "__main__":
-    # threading.Timer(1, open_new_tab).start()
     main()
