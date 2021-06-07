@@ -77,6 +77,7 @@ def parse_cli_args():
 
 def main():
     IS_VERBOSE = parse_cli_args()
+    threading.Timer(1, open_new_tab).start()
 
     server = flask.Flask(__name__)
 
@@ -361,5 +362,5 @@ def open_new_tab():
 
 
 if __name__ == "__main__":
-    threading.Timer(1, open_new_tab).start()
+    # threading.Timer(1, open_new_tab).start()
     main()
