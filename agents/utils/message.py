@@ -110,4 +110,4 @@ class Message:
             + Message.w[3] * self.journalistic
             + Message.w[4] * self.clickbait
             + Message.w[5] * self.images
-        ) / sum(Message.w)
+        ) * 100 / sum(Message.w)
