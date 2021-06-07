@@ -104,10 +104,14 @@ class Message:
 
     def calculate_power(self):
         return (
-            Message.w[0] * self.emotion["attitude"]
-            + Message.w[1] * self.emotion["arousal"]
-            + Message.w[2] * self.persuation
-            + Message.w[3] * self.journalistic
-            + Message.w[4] * self.clickbait
-            + Message.w[5] * self.images
-        ) * 100 / sum(Message.w)
+            (
+                Message.w[0] * self.emotion["attitude"]
+                + Message.w[1] * self.emotion["arousal"]
+                + Message.w[2] * self.persuation
+                + Message.w[3] * self.journalistic
+                + Message.w[4] * self.clickbait
+                + Message.w[5] * self.images
+            )
+            * 100
+            / sum(Message.w)
+        )

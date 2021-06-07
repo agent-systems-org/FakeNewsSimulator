@@ -87,7 +87,7 @@ class Common(Agent):
                 # read msg
                 content = News.fromJSON(msg.body)
 
-                if (self.agent.state == "susceptible"):
+                if self.agent.state == "susceptible":
                     if (content not in self.agent.believing) and (
                         content not in self.agent.debunking
                     ):
@@ -97,7 +97,9 @@ class Common(Agent):
                             1 + 10 ** ((msg_power - self.agent.susceptibility) / 50)
                         )
                         result = random.uniform(0, 100)
-                        if result > calculate_accept(msg_power, self.agent.susceptibility):  # accept the msg
+                        if result > calculate_accept(
+                            msg_power, self.agent.susceptibility
+                        ):  # accept the msg
                             self.agent.log(f"BELIEVED {msg_power}")
                             #                  sus: {self.agent.susceptibility} \n
                             #                  sus_delta: {CONVERGENCE * (1 - expected_score)} \n
@@ -130,21 +132,22 @@ class Common(Agent):
                             #                  result: {result} \n
                             #                  accept: {calculate_accept(msg_power, self.agent.susceptibility)}""")
                             self.agent.susceptibility = (
-                                self.agent.susceptibility + CONVERGENCE * (-expected_score)
+                                self.agent.susceptibility
+                                + CONVERGENCE * (-expected_score)
                             )
                             self.agent.debunking.append(content)
                         # self.agent.log(f"current sus: {self.agent.susceptibility}")
-                        if(self.agent.susceptibility < DEBUNK_SUS_BOUNDRY):
+                        if self.agent.susceptibility < DEBUNK_SUS_BOUNDRY:
                             self.agent.state = "debunking"
                             self.agent.create_news_behaviour.kill(0)
                             self.agent.susceptibility = 0
-                        if(self.agent.susceptibility > BELIVER_SUS_BOUNDRY):
+                        if self.agent.susceptibility > BELIVER_SUS_BOUNDRY:
                             self.agent.state = "believing"
                             self.agent.debunk_behaviour.kill(0)
                             self.agent.susceptibility = 100
-                    elif (self.agent.state == "believing"):
+                    elif self.agent.state == "believing":
                         self.agent.believing.append(content)
-                    elif (self.agent.state == "debunking"):
+                    elif self.agent.state == "debunking":
                         self.agent.debunking.append(content)
 
     class ShareNews(PeriodicBehaviour):
