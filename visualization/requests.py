@@ -15,6 +15,18 @@ class CustomJsonEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, obj)
 
 
+# TODO fix imports and use this class in json.loads() inside server.py in post_messages()
+class CustomJsonDecoder(json.JSONDecoder):
+    def __init__(self, *args, **kwargs):
+        json.JSONDecoder.__init__(self, object_hook=self.object_hook, *args, **kwargs)
+
+    # pylint: disable=E0202
+    def object_hook(self, dct):
+        if "full_msg" in dct:
+            return agents.utils.Message.fromJSON(dct["full_msg"])
+        return dct
+
+
 def send_post(url, json_data):
     try:
         requests.post(url, json_data)
