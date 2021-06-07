@@ -5,6 +5,7 @@ import datetime
 import threading
 import webbrowser
 import json
+import datetime
 import flask
 import pandas as pd
 import dash
@@ -89,13 +90,15 @@ def main():
         for msg in msgs:
             SERVER_MESSAGE_QUEUE.append(msg)
 
-            full_msg = json.loads((msg["full_msg"]))
+            full_msg = json.loads(msg["full_msg"])
             msg_parent_id = full_msg["parent_id"]
             if msg_parent_id in SERVER_MESSAGES:
                 SERVER_MESSAGES[msg_parent_id]["counter"] += 1
             else:
                 SERVER_MESSAGES[msg_parent_id] = full_msg
                 SERVER_MESSAGES[msg_parent_id]["counter"] = 1
+
+            SERVER_MESSAGES[msg_parent_id]["last_update"] = datetime.datetime.now()
 
             if IS_VERBOSE:
                 print(
@@ -364,19 +367,19 @@ def main():
     def update_table():
         if len(SERVER_MESSAGES) > 0:
             df = pd.DataFrame.from_dict(SERVER_MESSAGES, orient="index")
-            df["parent_id"] = df["parent_id"].apply(lambda i: str(i)[:6] + "...")
-            # print(df)
+            df["parent_id"] = df["parent_id"].apply(lambda i: str(i)[:10] + "...")
+            df = df.sort_values(by="last_update", ascending=False)
             list(df.columns)
             fig = go.Figure(
                 data=[
                     go.Table(
                         header=dict(
-                            values=["parent_id", "counter"],
+                            values=["parent_id", "counter", "last_update"],
                             fill_color="paleturquoise",
                             align="left",
                         ),
                         cells=dict(
-                            values=[df.parent_id, df.counter],
+                            values=[df.parent_id, df.counter, df.last_update],
                             fill_color="lavender",
                             align="left",
                         ),
