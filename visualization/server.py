@@ -22,8 +22,6 @@ SERVER_MESSAGES = {}
 SERVER_AGENTS = {}
 DEFAULT_IS_VERBOSE = False
 
-DEBUG_TOTAL_MSGS = 0
-
 # gui
 REFRESH_INTERVAL_MS = 10000
 MIN_REFRESH_INTERVAL_MS = 1000
@@ -88,9 +86,6 @@ def main():
     @server.route("/messages", methods=["POST"])
     def post_messages():
         msgs = json.loads(flask.request.data)
-
-        global DEBUG_TOTAL_MSGS
-        DEBUG_TOTAL_MSGS += len(msgs)
 
         for msg in msgs:
             SERVER_MESSAGE_QUEUE.append(msg)
@@ -373,9 +368,6 @@ def main():
         if len(SERVER_MESSAGES) > 0:
             server_messages_copy = dict(SERVER_MESSAGES)
             df = pd.DataFrame.from_dict(server_messages_copy, orient="index")
-
-            print(f"total msgs: {DEBUG_TOTAL_MSGS}")
-            print(f"update table: {df['counter'].sum()}")
 
             df["parent_id"] = df["parent_id"].apply(lambda i: str(i)[:10] + "...")
             df = df.sort_values(by="last_update", ascending=False)
