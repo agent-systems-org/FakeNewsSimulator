@@ -1,10 +1,18 @@
 import threading
 import json
 import requests
+import agents.utils
 from .server import HOST, PORT
 
 
 URL = f"http://{HOST}:{PORT}"
+
+
+class CustomJsonEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, agents.utils.Message):
+            return obj.toJSON()
+        return json.JSONEncoder.default(self, obj)
 
 
 def send_post(url, json_data):
@@ -24,6 +32,7 @@ def post_messages(msgs):
         "from_jid": JID
         "to_jid": JID
         "type": string
+        "full_msg": agents.utils.Message
     }
 
     supported message types:
@@ -37,10 +46,11 @@ def post_messages(msgs):
                 "from_jid": str(msg["from_jid"]),
                 "to_jid": str(msg["to_jid"]),
                 "type": msg["type"],
+                "full_msg": msg["full_msg"],
             }
         )
 
-    data = json.dumps(msg_dicts)
+    data = json.dumps(msg_dicts, cls=CustomJsonEncoder)
     threading.Thread(target=send_post, args=(URL + "/messages", data)).start()
 
 
