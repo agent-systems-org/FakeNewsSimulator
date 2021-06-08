@@ -7,15 +7,18 @@ from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
 from agents.utils import Message as News
+from agents.utils import calculate_accept
 from visualization import post_agent, post_messages
 
 INIT_SUSCEPTIBILITY = 50  # TBD
+DEBUNK_SUS_BOUNDRY = 20
+BELIVER_SUS_BOUNDRY = 80
 MAX_RECEIVE_TIME_SEC = 1000
 MAX_INITIAL_DELAY_SEC = 30
 MAX_SPREAD_INTERVAL_SEC = 120
-CONVERGENCE = 8
+CONVERGENCE = 16
 SEND_SELF_PERIOD_SEC = 5
-MSG_MUTATE_PROBOBILITY = 0.1
+MSG_MUTATE_PROBOBILITY = 0.01
 FOLLOW_NEWS_CREATOR_PROBABILITY = 1
 
 
@@ -36,6 +39,7 @@ class Common(Agent):
         self.period_create = random.randint(20, MAX_SPREAD_INTERVAL_SEC)
         self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
         self.type = "common"
+        self.state = "susceptible"
 
     def log(self, msg):
         full_date = datetime.datetime.now()
@@ -77,50 +81,73 @@ class Common(Agent):
         async def run(self):
             msg = await self.receive(MAX_RECEIVE_TIME_SEC)
 
-            self.agent.log(f"number of neighbours: {len(self.agent.adj_list)}")
-
             if not msg:
                 self.agent.log("timeout or received msg is empty")
             else:
                 # read msg
                 content = News.fromJSON(msg.body)
 
-                if (content not in self.agent.believing) and (
-                    content not in self.agent.debunking
-                ):
-                    # its math time
-                    msg_power = content.calculate_power()
-                    expected_score = 1 / (
-                        1 + 10 ** ((msg_power - self.agent.susceptibility) / 50)
-                    )
-                    result = random.uniform(0, 100)
-                    if result > 50 - (
-                        msg_power - self.agent.susceptibility
-                    ):  # accept the msg
-                        self.agent.susceptibility = (
-                            self.agent.susceptibility
-                            + CONVERGENCE * (1 - expected_score)
+                if self.agent.state == "susceptible":
+                    if (content not in self.agent.believing) and (
+                        content not in self.agent.debunking
+                    ):
+                        # its math time
+                        msg_power = content.calculate_power()
+                        expected_score = 1 / (
+                            1 + 10 ** ((msg_power - self.agent.susceptibility) / 50)
                         )
-                        if random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY:
-                            follow_request = Message()
-                            follow_request.to = str(self.agent.graph_creator_jid)
-                            follow_request.set_metadata("performative", "query")
-                            follow_request.body = json.dumps(
-                                {"follow": content.creator_jid}
+                        result = random.uniform(0, 100)
+                        if result > calculate_accept(
+                            msg_power, self.agent.susceptibility
+                        ):  # accept the msg
+                            self.agent.log(f"BELIEVED {msg_power}")
+                            #                  sus: {self.agent.susceptibility} \n
+                            #                  sus_delta: {CONVERGENCE * (1 - expected_score)} \n
+                            #                  result: {result} \n
+                            #                  accept: {calculate_accept(msg_power, self.agent.susceptibility)}""")
+                            self.agent.susceptibility = (
+                                self.agent.susceptibility
+                                + CONVERGENCE * (1 - expected_score)
                             )
-                            await self.send(follow_request)
+                            if random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY:
+                                follow_request = Message()
+                                follow_request.to = str(self.agent.graph_creator_jid)
+                                follow_request.set_metadata("performative", "query")
+                                follow_request.body = json.dumps(
+                                    {"follow": content.creator_jid}
+                                )
+                                await self.send(follow_request)
 
-                        if content.debunking:
-                            self.agent.believing = [
-                                m
-                                for m in self.agent.believing
-                                if m.id != content.debunk_id
-                            ]
+                            if content.debunking:
+                                self.agent.believing = [
+                                    m
+                                    for m in self.agent.believing
+                                    if m.id != content.debunk_id
+                                ]
+                            self.agent.believing.append(content)
+                        else:  # refute the msg
+                            self.agent.log(f"REFUTED {msg_power} \n")
+                            #                  sus: {self.agent.susceptibility} \n
+                            #                  sus_delta: {CONVERGENCE * (- expected_score)} \n
+                            #                  result: {result} \n
+                            #                  accept: {calculate_accept(msg_power, self.agent.susceptibility)}""")
+                            self.agent.susceptibility = (
+                                self.agent.susceptibility
+                                + CONVERGENCE * (-expected_score)
+                            )
+                            self.agent.debunking.append(content)
+                        # self.agent.log(f"current sus: {self.agent.susceptibility}")
+                        if self.agent.susceptibility < DEBUNK_SUS_BOUNDRY:
+                            self.agent.state = "debunking"
+                            self.agent.create_news_behaviour.kill(0)
+                            self.agent.susceptibility = 0
+                        if self.agent.susceptibility > BELIVER_SUS_BOUNDRY:
+                            self.agent.state = "believing"
+                            self.agent.debunk_behaviour.kill(0)
+                            self.agent.susceptibility = 100
+                    elif self.agent.state == "believing":
                         self.agent.believing.append(content)
-                    else:  # refute the msg
-                        self.agent.susceptibility = (
-                            self.agent.susceptibility + CONVERGENCE * (-expected_score)
-                        )
+                    elif self.agent.state == "debunking":
                         self.agent.debunking.append(content)
 
     class ShareNews(PeriodicBehaviour):
