@@ -90,7 +90,7 @@ class GraphCreator(Agent):
 
     def generate_adj_dict(self):
         for i in range(self.vertices_no):
-            self.adj_dict[i]= set()
+            self.adj_dict[i] = set()
 
         for i in range(self.vertices_no):
             num_neighbours = self.generate_num_of_neighbours()
@@ -103,13 +103,13 @@ class GraphCreator(Agent):
             neighbours_indices = nearest_indices[0][1:]
             neighbours = {self.jids[idx] for idx in neighbours_indices}
 
-            p  = 1 - num_neighbours / self.vertices_no
+            p = 1 - num_neighbours / self.vertices_no
             bidirictional_connections_no = np.random.binomial(num_neighbours, p)
 
             for idx in neighbours_indices[:bidirictional_connections_no]:
                 self.adj_dict[idx].add(self.jids[i])
 
-            self.adj_dict[i]  |= neighbours
+            self.adj_dict[i] |= neighbours
 
     def generate_coordinates(self):
         dimensions = 2
