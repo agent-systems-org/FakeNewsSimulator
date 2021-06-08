@@ -37,9 +37,10 @@ class Bot(Agent):
         self.susceptible_topic = topic
 
     def log(self, msg):
-        full_date = datetime.datetime.now()
-        time = datetime.datetime.strftime(full_date, "%H:%M:%S")
-        print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
+        pass
+        # full_date = datetime.datetime.now()
+        # time = datetime.datetime.strftime(full_date, "%H:%M:%S")
+        # print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
 
     def has_message(self, msg):
         for fakenews in self.fakenews_msgs:
