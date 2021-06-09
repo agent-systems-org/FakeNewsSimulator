@@ -19,7 +19,8 @@ MAX_SPREAD_INTERVAL_SEC = 120
 CONVERGENCE = 16
 SEND_SELF_PERIOD_SEC = 5
 MSG_MUTATE_PROBOBILITY = 0.01
-FOLLOW_NEWS_CREATOR_PROBABILITY = 1
+FOLLOW_NEWS_CREATOR_PROBABILITY = 0.2
+UNFOLLOW_NEWS_CREATOR_PROBABILITY = 0.1
 
 
 class Common(Agent):
@@ -109,7 +110,7 @@ class Common(Agent):
                                 self.agent.susceptibility
                                 + CONVERGENCE * (1 - expected_score)
                             )
-                            if random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY:
+                            if (random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY):
                                 follow_request = Message()
                                 follow_request.to = str(self.agent.graph_creator_jid)
                                 follow_request.set_metadata("performative", "query")
@@ -119,10 +120,25 @@ class Common(Agent):
                                 await self.send(follow_request)
 
                             if content.debunking:
+                                to_unfollow = [
+                                        m for m in self.agent.beliving 
+                                        if (m.id == content.debunk_id or m.parent_id == content.debunk_id)
+                                        ]
+
+                                for msg in to_unfollow:
+                                    if(random.random() < UNFOLLOW_NEWS_CREATOR_PROBABILITY):
+                                        unfollow_request = Message()
+                                        unfollow_request.to = str(self.agent.graph_creator_jid)
+                                        unfollow_request.set_metadata("performative", "query")
+                                        unfollow_request.body = json.dumps(
+                                                {"unfollow": msg.creator_jid}
+                                                )
+                                        await self.send(unfollow_request)
+
                                 self.agent.believing = [
                                     m
                                     for m in self.agent.believing
-                                    if m.id != content.debunk_id
+                                    if (m.id != content.debunk_id or m.parent_id != content.debunk_id)
                                 ]
                             self.agent.believing.append(content)
                         else:  # refute the msg

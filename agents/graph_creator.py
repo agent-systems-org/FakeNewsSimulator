@@ -141,21 +141,38 @@ class GraphCreator(Agent):
             if msg:
                 sender_jid = str(msg.sender)
                 body_json = json.loads(msg.body)
-                user_to_follow_jid = str(body_json["follow"])
+                if "follow" in body_json:
+                    user_to_follow_jid = str(body_json["follow"])
 
-                if (
-                    sender_jid not in self.agent.jid_map
-                    or user_to_follow_jid not in self.agent.jid_map
-                ):
-                    return
+                    if (
+                        sender_jid not in self.agent.jid_map
+                        or user_to_follow_jid not in self.agent.jid_map
+                    ):
+                        return
 
-                sender_id = self.agent.jid_map[sender_jid]
-                user_to_follow_id = self.agent.jid_map[user_to_follow_jid]
+                    sender_id = self.agent.jid_map[sender_jid]
+                    user_to_follow_id = self.agent.jid_map[user_to_follow_jid]
 
-                if (
-                    sender_id not in self.agent.adj_dict
-                    or user_to_follow_id not in self.agent.adj_dict
-                ):
-                    return
+                    if (
+                        sender_id not in self.agent.adj_dict
+                        or user_to_follow_id not in self.agent.adj_dict
+                    ):
+                        return
 
-                self.agent.adj_dict[user_to_follow_id].add(sender_jid)
+                    self.agent.adj_dict[user_to_follow_id].add(sender_jid)
+                elif "unfollow" in body_json:
+                    user_to_unfollow_jid = str(body_json["unfollow"])
+                    if (
+                        sender_jid not in self.agent.jid_map
+                        or user_to_unfollow_jid not in self.agent.jid_map
+                    ):
+                        return
+                    sender_id = self.agent.jid_map[sender_jid]
+                    user_to_unfollow_id = self.agent.jid_map[user_to_unfollow_jid]
+                    if (
+                        sender_id not in self.agent.adj_dict
+                        or user_to_unfollow_id not in self.agent.adj_dict
+                    ):
+                        return
+                    self.agent.adj_dict[user_to_unfollow_id].remove(sender_jid)
+
