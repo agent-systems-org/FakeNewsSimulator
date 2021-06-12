@@ -4,7 +4,7 @@ import asyncio
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
-from visualization import post_agent, post_messages
+import visualization
 from agents.utils import Message as News
 
 
@@ -37,9 +37,10 @@ class Bot(Agent):
         self.susceptible_topic = topic
 
     def log(self, msg):
-        full_date = datetime.datetime.now()
-        time = datetime.datetime.strftime(full_date, "%H:%M:%S")
-        print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
+        pass
+        # full_date = datetime.datetime.now()
+        # time = datetime.datetime.strftime(full_date, "%H:%M:%S")
+        # print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
 
     def has_message(self, msg):
         for fakenews in self.fakenews_msgs:
@@ -90,10 +91,11 @@ class Bot(Agent):
                             "from_jid": self.agent.jid,
                             "to_jid": recipient,
                             "type": "fakenews",
+                            "full_msg": rand_fakenews_msg,
                         }
                     )
 
-                post_messages(msgs_to_visualize)
+                visualization.post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
 
             else:
@@ -120,4 +122,4 @@ class Bot(Agent):
 
     class SendSelfToVisualization(PeriodicBehaviour):
         async def run(self):
-            post_agent(self.agent)
+            visualization.post_agent(self.agent)

@@ -6,7 +6,7 @@ import math
 from spade import quit_spade
 import matplotlib.pyplot as plt
 from matplotlib import animation
-from visualization import visualize_connections
+import visualization
 from agents import GraphCreator
 
 DEFAULT_NUM_AGENTS = 80
@@ -62,7 +62,7 @@ def main():
 
         _ = animation.FuncAnimation(
             fig,
-            visualize_connections,
+            visualization.visualize_connections,
             fargs=(agents,),
             interval=math.sqrt(len(agents)) * 1000,
         )
