@@ -12,6 +12,7 @@
   - dash
   - plotly
   - sklearn
+  - pandas
 
 ## How to run
 
