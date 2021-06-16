@@ -25,11 +25,12 @@ instead of the loop with 'time.sleep' as it starts the blocking GUI loop):
 
 import networkx as nx
 import matplotlib.pyplot as plt
+import hashlib
 from .server import AGENT_TYPE_STYLE
 
 
 def get_id(jid):
-    return str(jid).split("/")[1]
+    return hashlib.md5(str(jid).encode()).hexdigest()
 
 
 def visualize_connections(epoch, agents):
