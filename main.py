@@ -43,8 +43,8 @@ def main():
     num_agents, IS_CONNECTIONS_VISUALIZATION_ON = parse_cli_args()
 
     base = "fake_news"
-    domain = "@jabbim.pl/1000"
-    # domain = "@localhost/1000"
+    # domain = "@jabbim.pl/5000"
+    domain = "@localhost/1000"
     password = "12345"
 
     graph_creator = GraphCreator(base, domain, password, num_agents)

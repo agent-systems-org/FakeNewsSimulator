@@ -18,6 +18,7 @@ class Message:
         jid -- creator's jid
         """
         self.creator_jid = str(jid)
+        self.parent_id = 0
 
     def new(self, topic):
         """Generates new random message
