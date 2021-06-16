@@ -44,9 +44,10 @@ class Common(Agent):
         self.state = "susceptible"
 
     def log(self, msg):
-        full_date = datetime.datetime.now()
-        time = datetime.datetime.strftime(full_date, "%H:%M:%S")
-        print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
+        pass
+        # full_date = datetime.datetime.now()
+        # time = datetime.datetime.strftime(full_date, "%H:%M:%S")
+        # print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
 
     async def setup(self):
         self.log(
@@ -153,7 +154,7 @@ class Common(Agent):
                                 ]
                             self.agent.believing.append(content)
                         else:  # refute the msg
-                            self.agent.log(f"REFUTED {msg_power} \n")
+                            self.agent.log(f"REFUTED {msg_power}")
                             #                  sus: {self.agent.susceptibility} \n
                             #                  sus_delta: {CONVERGENCE * (- expected_score)} \n
                             #                  result: {result} \n
