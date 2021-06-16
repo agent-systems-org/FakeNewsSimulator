@@ -15,10 +15,10 @@ DEBUNK_SUS_BOUNDRY = 20
 BELIVER_SUS_BOUNDRY = 80
 MAX_RECEIVE_TIME_SEC = 1000
 MAX_INITIAL_DELAY_SEC = 30
-MAX_SPREAD_INTERVAL_SEC = 120
+MAX_SPREAD_INTERVAL_SEC = 10
 CONVERGENCE = 16
 SEND_SELF_PERIOD_SEC = 5
-MSG_MUTATE_PROBOBILITY = 0.01
+MSG_MUTATE_PROBOBILITY = 0.001
 FOLLOW_NEWS_CREATOR_PROBABILITY = 1
 
 
@@ -36,7 +36,7 @@ class Common(Agent):
         self.susceptible_topic = topic
         self.period_debunk = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
         self.period_share = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
-        self.period_create = random.randint(20, MAX_SPREAD_INTERVAL_SEC)
+        self.period_create = random.randint(20, MAX_SPREAD_INTERVAL_SEC+11)
         self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
         self.type = "common"
         self.state = "susceptible"

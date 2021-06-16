@@ -1,7 +1,6 @@
 import random
 import json
 import numpy as np
-import pickle
 from spade.message import Message
 from sklearn.neighbors import KDTree
 from spade.agent import Agent
@@ -20,7 +19,6 @@ class GraphCreator(Agent):
         password,
         vertices_no,
         avg=None,
-        std=None,
         mapsize=100,
         verify_security=False,
     ):
@@ -28,10 +26,7 @@ class GraphCreator(Agent):
         super().__init__(jid, password, verify_security)
 
         if avg is None:
-            avg = vertices_no / 2.0
-
-        if std is None:
-            std = vertices_no / 2.0
+            avg = min(vertices_no ** 0.5, 700)
 
         self.adj_dict = {}
         self.locations = []
@@ -40,8 +35,6 @@ class GraphCreator(Agent):
         self.agents = []
         self.jids = []
         self.avg = avg
-        self.std = std
-        self.update_counter = 0
         self.vertices_no = vertices_no
         self.mapsize = mapsize
         # self.domain_number = 0
@@ -98,6 +91,9 @@ class GraphCreator(Agent):
 
     def generate_adj_dict(self):
         for i in range(self.vertices_no):
+            self.adj_dict[i] = set()
+
+        for i in range(self.vertices_no):
             num_neighbours = self.generate_num_of_neighbours()
             node_location = self.locations[i]
 
@@ -108,7 +104,13 @@ class GraphCreator(Agent):
             neighbours_indices = nearest_indices[0][1:]
             neighbours = {self.jids[idx] for idx in neighbours_indices}
 
-            self.adj_dict[i] = neighbours
+            p = 1 - num_neighbours / self.vertices_no
+            bidirictional_connections_no = np.random.binomial(num_neighbours, p)
+
+            for idx in neighbours_indices[:bidirictional_connections_no]:
+                self.adj_dict[idx].add(self.jids[i])
+
+            self.adj_dict[i] |= neighbours
 
     def generate_coordinates(self):
         dimensions = 2
@@ -119,7 +121,7 @@ class GraphCreator(Agent):
         self.location_tree = KDTree(coordinates)
 
     def generate_num_of_neighbours(self):
-        x = np.random.normal(self.avg, self.std)
+        x = np.random.exponential(self.avg)
         x = max(1, x)
         x = min(self.vertices_no - 1, x)
         return int(x)
@@ -159,10 +161,5 @@ class GraphCreator(Agent):
                     or user_to_follow_id not in self.agent.adj_dict
                 ):
                     return
-                print(f"DUPA DUPA DUPA UPDATING counter: {self.agent.counter}")
-                if(self.agent.counter % 10 == 0):
-                    pickle.dump(self.agent.agents,
-                                open(f'./dumps/agents_t_{self.agent.counter}', 'w'))
-                self.agent.counter += 1
 
                 self.agent.adj_dict[user_to_follow_id].add(sender_jid)

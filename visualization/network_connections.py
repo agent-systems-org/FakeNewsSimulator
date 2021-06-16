@@ -89,9 +89,9 @@ def visualize_connections(epoch, agents):
             "f": attr_dict["followers"],
         }
 
-    nx.draw_networkx_labels(
-        graph, positions, font_size=12, font_weight="bold", labels=labels
-    )
+    # nx.draw_networkx_labels(
+    #     graph, positions, font_size=12, font_weight="bold", labels=labels
+    # )
 
     legend = """
     t - type
