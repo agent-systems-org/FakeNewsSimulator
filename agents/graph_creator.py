@@ -1,6 +1,7 @@
 import random
 import json
 import numpy as np
+import pickle
 from spade.message import Message
 from sklearn.neighbors import KDTree
 from spade.agent import Agent
@@ -40,6 +41,7 @@ class GraphCreator(Agent):
         self.jids = []
         self.avg = avg
         self.std = std
+        self.update_counter = 0
         self.vertices_no = vertices_no
         self.mapsize = mapsize
         # self.domain_number = 0
@@ -157,5 +159,10 @@ class GraphCreator(Agent):
                     or user_to_follow_id not in self.agent.adj_dict
                 ):
                     return
+                print(f"DUPA DUPA DUPA UPDATING counter: {self.agent.counter}")
+                if(self.agent.counter % 10 == 0):
+                    pickle.dump(self.agent.agents,
+                                open(f'./dumps/agents_t_{self.agent.counter}', 'w'))
+                self.agent.counter += 1
 
                 self.agent.adj_dict[user_to_follow_id].add(sender_jid)
