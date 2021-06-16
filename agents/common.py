@@ -6,16 +6,16 @@ import asyncio
 from spade.behaviour import PeriodicBehaviour, CyclicBehaviour
 from spade.agent import Agent
 from spade.message import Message
+import visualization
 from agents.utils import Message as News
 from agents.utils import calculate_accept
-from visualization import post_agent, post_messages
 
 INIT_SUSCEPTIBILITY = 50  # TBD
 DEBUNK_SUS_BOUNDRY = 20
 BELIVER_SUS_BOUNDRY = 80
 MAX_RECEIVE_TIME_SEC = 1000
 MAX_INITIAL_DELAY_SEC = 30
-MAX_SPREAD_INTERVAL_SEC = 120
+MAX_SPREAD_INTERVAL_SEC = 10
 CONVERGENCE = 16
 SEND_SELF_PERIOD_SEC = 5
 MSG_MUTATE_PROBOBILITY = 0.01
@@ -37,7 +37,7 @@ class Common(Agent):
         self.susceptible_topic = topic
         self.period_debunk = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
         self.period_share = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
-        self.period_create = random.randint(20, MAX_SPREAD_INTERVAL_SEC)
+        self.period_create = random.randint(20, MAX_SPREAD_INTERVAL_SEC+11)
         self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
         self.type = "common"
         self.state = "susceptible"
@@ -121,7 +121,7 @@ class Common(Agent):
 
                             if content.debunking:
                                 to_unfollow = [
-                                        m for m in self.agent.beliving 
+                                        m for m in self.agent.beliving
                                         if (m.id == content.debunk_id or m.parent_id == content.debunk_id)
                                         ]
 
@@ -196,10 +196,11 @@ class Common(Agent):
                             "type": "debunk"
                             if rand_believing_msg.debunking
                             else "fakenews",
+                            "full_msg": rand_believing_msg,
                         }
                     )
 
-                post_messages(msgs_to_visualize)
+                visualization.post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
@@ -230,10 +231,11 @@ class Common(Agent):
                             "from_jid": self.agent.jid,
                             "to_jid": recipient,
                             "type": "debunk",
+                            "full_msg": debunk_msg,
                         }
                     )
 
-                post_messages(msgs_to_visualize)
+                visualization.post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
@@ -266,10 +268,11 @@ class Common(Agent):
                             "from_jid": self.agent.jid,
                             "to_jid": recipient,
                             "type": "fakenews",
+                            "full_msg": new_fake_news,
                         }
                     )
 
-                post_messages(msgs_to_visualize)
+                visualization.post_messages(msgs_to_visualize)
                 await asyncio.wait([self.send(msg) for msg in msgs])
             else:
                 self.agent.log(
@@ -278,4 +281,4 @@ class Common(Agent):
 
     class SendSelfToVisualization(PeriodicBehaviour):
         async def run(self):
-            post_agent(self.agent)
+            visualization.post_agent(self.agent)
