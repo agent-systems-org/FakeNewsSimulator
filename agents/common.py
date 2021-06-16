@@ -111,7 +111,7 @@ class Common(Agent):
                                 self.agent.susceptibility
                                 + CONVERGENCE * (1 - expected_score)
                             )
-                            if (random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY):
+                            if random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY:
                                 follow_request = Message()
                                 follow_request.to = str(self.agent.graph_creator_jid)
                                 follow_request.body = json.dumps(
@@ -121,23 +121,35 @@ class Common(Agent):
 
                             if content.debunking:
                                 to_unfollow = [
-                                        m for m in self.agent.believing
-                                        if (m.id == content.debunk_id or m.parent_id == content.debunk_id)
-                                        ]
+                                    m
+                                    for m in self.agent.believing
+                                    if (
+                                        m.id == content.debunk_id
+                                        or m.parent_id == content.debunk_id
+                                    )
+                                ]
 
                                 for msg in to_unfollow:
-                                    if(random.random() < UNFOLLOW_NEWS_CREATOR_PROBABILITY):
+                                    if (
+                                        random.random()
+                                        < UNFOLLOW_NEWS_CREATOR_PROBABILITY
+                                    ):
                                         unfollow_request = Message()
-                                        unfollow_request.to = str(self.agent.graph_creator_jid)
+                                        unfollow_request.to = str(
+                                            self.agent.graph_creator_jid
+                                        )
                                         unfollow_request.body = json.dumps(
-                                                {"unfollow": content.creator_jid}
-                                                )
+                                            {"unfollow": content.creator_jid}
+                                        )
                                         await self.send(unfollow_request)
 
                                 self.agent.believing = [
                                     m
                                     for m in self.agent.believing
-                                    if (m.id != content.debunk_id or m.parent_id != content.debunk_id)
+                                    if (
+                                        m.id != content.debunk_id
+                                        or m.parent_id != content.debunk_id
+                                    )
                                 ]
                             self.agent.believing.append(content)
                         else:  # refute the msg

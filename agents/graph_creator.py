@@ -1,11 +1,10 @@
 import random
 import json
 import numpy as np
-# from spade.message import Message
+import traceback
 from sklearn.neighbors import KDTree
 from spade.agent import Agent
 from spade.behaviour import CyclicBehaviour
-# from spade.template import Template
 from .common import Common
 from .bot import Bot
 from .utils.message import NUM_TOPICS
@@ -37,8 +36,6 @@ class GraphCreator(Agent):
         self.avg = avg
         self.vertices_no = vertices_no
         self.mapsize = mapsize
-        # self.domain_number = 0
-        # self.domain = jid.split("@")[1]
         [self.domain, self.domain_number] = domain.split("/")
         self.base_number = 0
         self.base = base
@@ -53,7 +50,7 @@ class GraphCreator(Agent):
             jid = f"{self.base}{self.base_number}{self.domain}/{self.domain_number+j+1}"
             print(jid)
             self.jids.append(jid)
-            self.jid_map[jid] = j
+            self.jid_map[jid] = i
             j = j + 1
             if j == 10:
                 self.base_number += 1
@@ -132,47 +129,53 @@ class GraphCreator(Agent):
         self.generate_adj_dict()
         print("Initializing agents")
         self.generate_agents()
-
-        # template = Template()
-        # template.set_metadata("performative", "query")
         b = self.UpdateGraphBehaviour()
         self.add_behaviour(b)
 
     class UpdateGraphBehaviour(CyclicBehaviour):
         async def run(self):
-            msg = await self.receive(timeout=1)
+            try:
+                msg = await self.receive(timeout=1)
 
-            if msg:
-                sender_jid = str(msg.sender)
-                body_json = json.loads(msg.body)
-                if "follow" in body_json:
-                    user_to_follow_jid = str(body_json["follow"])
+                if msg:
+                    sender_jid = str(msg.sender)
+                    body_json = json.loads(msg.body)
+                    if "follow" in body_json:
+                        user_to_follow_jid = str(body_json["follow"])
 
-                    if (
-                        sender_jid in self.agent.jid_map
-                        and user_to_follow_jid in self.agent.jid_map
-                    ):
-                        sender_id = self.agent.jid_map[sender_jid]
-                        user_to_follow_id = self.agent.jid_map[user_to_follow_jid]
+                        if (
+                            sender_jid in self.agent.jid_map
+                            and user_to_follow_jid in self.agent.jid_map
+                        ):
+                            sender_id = self.agent.jid_map[sender_jid]
+                            user_to_follow_id = self.agent.jid_map[user_to_follow_jid]
+                        else:
+                            return
 
-                    if (
-                        sender_id in self.agent.adj_dict
-                        and user_to_follow_id in self.agent.adj_dict
-                    ):
-                        print("FOLLOWING!!!")
-                        self.agent.adj_dict[user_to_follow_id].add(sender_jid)
-                elif "unfollow" in body_json:
-                    user_to_unfollow_jid = str(body_json["unfollow"])
-                    if (
-                        sender_jid in self.agent.jid_map
-                        and user_to_unfollow_jid in self.agent.jid_map
-                    ):
-                        sender_id = self.agent.jid_map[sender_jid]
-                        user_to_unfollow_id = self.agent.jid_map[user_to_unfollow_jid]
-                    if (
-                        sender_id in self.agent.adj_dict
-                        and user_to_unfollow_id in self.agent.adj_dict
-                    ):
-                        print("UNFOLING!!!")
-                        self.agent.adj_dict[user_to_unfollow_id].remove(sender_jid)
+                        if (
+                            sender_id in self.agent.adj_dict
+                            and user_to_follow_id in self.agent.adj_dict
+                        ):
+                            self.agent.adj_dict[user_to_follow_id].add(sender_jid)
 
+                    elif "unfollow" in body_json:
+                        user_to_unfollow_jid = str(body_json["unfollow"])
+                        if (
+                            sender_jid in self.agent.jid_map
+                            and user_to_unfollow_jid in self.agent.jid_map
+                        ):
+                            sender_id = self.agent.jid_map[sender_jid]
+                            user_to_unfollow_id = self.agent.jid_map[
+                                user_to_unfollow_jid
+                            ]
+                        else:
+                            return
+
+                        if (
+                            sender_id in self.agent.adj_dict
+                            and user_to_unfollow_id in self.agent.adj_dict
+                            and sender_jid in self.agent.adj_dict[user_to_unfollow_id]
+                        ):
+                            self.agent.adj_dict[user_to_unfollow_id].remove(sender_jid)
+            except Exception:
+                print(traceback.format_exc())
