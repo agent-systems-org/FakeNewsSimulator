@@ -18,7 +18,6 @@ class Message:
         jid -- creator's jid
         """
         self.creator_jid = str(jid)
-        self.parent_id = 0
 
     def new(self, topic):
         """Generates new random message
@@ -86,6 +85,7 @@ class Message:
         ret = Message()
         tmp = json.loads(msg_json, object_hook=lambda d: SimpleNamespace(**d))
         ret.id = tmp.id
+        ret.parent_id = tmp.parent_id
         ret.topic = tmp.topic
         ret.creator_jid = tmp.creator_jid
         ret.emotion = {}
