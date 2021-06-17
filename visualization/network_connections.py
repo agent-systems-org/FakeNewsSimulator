@@ -93,10 +93,10 @@ def visualize_connections(epoch, agents):
     #     graph, positions, font_size=12, font_weight="bold", labels=labels
     # )
 
-    legend = """
-    t - type
-    f - followers count
-    """
-    plt.text(0.02, 0.5, legend, fontsize=14, transform=plt.gcf().transFigure)
+    # legend = """
+    # t - type
+    # f - followers count
+    # """
+    # plt.text(0.02, 0.5, legend, fontsize=14, transform=plt.gcf().transFigure)
     plt.get_current_fig_manager().set_window_title("Fake news simulator")
     plt.title("Network graph")
