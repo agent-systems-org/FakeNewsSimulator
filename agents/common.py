@@ -15,11 +15,13 @@ DEBUNK_SUS_BOUNDRY = 20
 BELIVER_SUS_BOUNDRY = 80
 MAX_RECEIVE_TIME_SEC = 1000
 MAX_INITIAL_DELAY_SEC = 30
-MAX_SPREAD_INTERVAL_SEC = 120
+MAX_SPREAD_INTERVAL_SEC = 10
+MAX_CREATE_INTERVAL_SEC = 300
 CONVERGENCE = 16
 SEND_SELF_PERIOD_SEC = 5
-MSG_MUTATE_PROBOBILITY = 0.01
-FOLLOW_NEWS_CREATOR_PROBABILITY = 1
+MSG_MUTATE_PROBOBILITY = 1
+FOLLOW_NEWS_CREATOR_PROBABILITY = 0.1
+UNFOLLOW_NEWS_CREATOR_PROBABILITY = 1
 
 
 class Common(Agent):
@@ -36,7 +38,7 @@ class Common(Agent):
         self.susceptible_topic = topic
         self.period_debunk = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
         self.period_share = random.randint(3, MAX_SPREAD_INTERVAL_SEC)
-        self.period_create = random.randint(20, MAX_SPREAD_INTERVAL_SEC)
+        self.period_create = random.randint(60, MAX_CREATE_INTERVAL_SEC)
         self.delay = random.randint(1, MAX_INITIAL_DELAY_SEC)
         self.type = "common"
         self.state = "susceptible"
@@ -112,21 +114,46 @@ class Common(Agent):
                             if random.random() < FOLLOW_NEWS_CREATOR_PROBABILITY:
                                 follow_request = Message()
                                 follow_request.to = str(self.agent.graph_creator_jid)
-                                follow_request.set_metadata("performative", "query")
                                 follow_request.body = json.dumps(
                                     {"follow": content.creator_jid}
                                 )
                                 await self.send(follow_request)
 
                             if content.debunking:
+                                to_unfollow = [
+                                    m
+                                    for m in self.agent.believing
+                                    if (
+                                        m.id == content.debunk_id
+                                        or m.parent_id == content.debunk_id
+                                    )
+                                ]
+
+                                for msg in to_unfollow:
+                                    if (
+                                        random.random()
+                                        < UNFOLLOW_NEWS_CREATOR_PROBABILITY
+                                    ):
+                                        unfollow_request = Message()
+                                        unfollow_request.to = str(
+                                            self.agent.graph_creator_jid
+                                        )
+                                        unfollow_request.body = json.dumps(
+                                            {"unfollow": content.creator_jid}
+                                        )
+                                        await self.send(unfollow_request)
+
                                 self.agent.believing = [
                                     m
                                     for m in self.agent.believing
-                                    if m.id != content.debunk_id
+                                    if (
+                                        m.id != content.debunk_id
+                                        or m.parent_id != content.debunk_id
+                                    )
                                 ]
                             self.agent.believing.append(content)
                         else:  # refute the msg
-                            self.agent.log(f"REFUTED {msg_power} \n")
+                            self.agent.log(f"REFUTED {msg_power}")
                             #                  sus: {self.agent.susceptibility} \n
                             #                  sus_delta: {CONVERGENCE * (- expected_score)} \n
                             #                  result: {result} \n
