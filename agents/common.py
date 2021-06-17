@@ -44,10 +44,9 @@ class Common(Agent):
         self.state = "susceptible"
 
     def log(self, msg):
-        pass
-        # full_date = datetime.datetime.now()
-        # time = datetime.datetime.strftime(full_date, "%H:%M:%S")
-        # print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
+        full_date = datetime.datetime.now()
+        time = datetime.datetime.strftime(full_date, "%H:%M:%S")
+        print(f"[{time}] {str(self.jid)} {self.type[0].capitalize()}: {msg}")
 
     async def setup(self):
         self.log(
